@@ -1,0 +1,39 @@
+{
+  "name": "news-crawler-service",
+  "version": "1.0.0",
+  "description": "TypeScript news crawler service for Nepali news sites",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "watch": "tsc -w",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "crawler",
+    "scraper",
+    "news",
+    "nepal"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.5",
+    "bull": "^4.12.0",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
+    "ioredis": "^5.3.2",
+    "node-cron": "^3.0.3",
+    "playwright": "^1.40.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/bull": "^4.10.0",
+    "@types/cheerio": "^0.22.35",
+    "@types/node": "^20.10.6",
+    "@types/node-cron": "^3.0.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
