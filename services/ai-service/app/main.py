@@ -11,7 +11,7 @@ import sys
 import time
 
 from app.core.config import settings
-from app.api.v1 import summarize, translate, moderate
+from app.api.v1 import summarize, translate, moderate, credibility
 from app.models.article import ErrorResponse
 
 
@@ -192,6 +192,7 @@ async def root() -> Dict[str, Any]:
                 "summarize": f"{settings.api_v1_prefix}/summarize",
                 "translate": f"{settings.api_v1_prefix}/translate",
                 "moderate": f"{settings.api_v1_prefix}/moderate",
+                "credibility": f"{settings.api_v1_prefix}/credibility",
             }
         },
     }
@@ -208,6 +209,10 @@ app.include_router(
 )
 app.include_router(
     moderate.router,
+    prefix=settings.api_v1_prefix,
+)
+app.include_router(
+    credibility.router,
     prefix=settings.api_v1_prefix,
 )
 
