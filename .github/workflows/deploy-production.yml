@@ -1,0 +1,29 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment..."
+          # Add your production deployment commands here
+
+      - name: Run smoke tests
+        run: |
+          echo "Running production smoke tests..."
+          # Add production smoke test commands
+
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "Production deployment completed"
+          # Add notification logic
