@@ -18,45 +18,43 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-white">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-full bg-primary" />
-            <span className="text-xl font-bold">Nepali News</span>
-          </div>
+        <Link href="/" className="flex items-center space-x-3">
+          <div className="h-8 w-8 bg-primary" />
+          <span className="text-xl font-serif font-bold tracking-tight">Nepali News</span>
         </Link>
 
         {/* Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
+        <nav className="hidden md:flex items-center space-x-8">
           <Link
             href="/"
-            className="text-sm font-medium transition-colors hover:text-primary"
+            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
           >
             Home
           </Link>
           <Link
             href="/categories/politics"
-            className="text-sm font-medium transition-colors hover:text-primary"
+            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
           >
             Politics
           </Link>
           <Link
             href="/categories/business"
-            className="text-sm font-medium transition-colors hover:text-primary"
+            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
           >
             Business
           </Link>
           <Link
             href="/categories/sports"
-            className="text-sm font-medium transition-colors hover:text-primary"
+            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
           >
             Sports
           </Link>
           <Link
             href="/categories/entertainment"
-            className="text-sm font-medium transition-colors hover:text-primary"
+            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
           >
             Entertainment
           </Link>
@@ -68,14 +66,14 @@ export function Header() {
             <div className="relative">
               <Input
                 type="search"
-                placeholder="Search news..."
-                className="w-64"
+                placeholder="Search..."
+                className="w-48 border-foreground/20 focus:border-primary"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </form>
-          <Button variant="outline" size="sm">
+          <Button variant="default" size="sm" className="font-semibold">
             Sign In
           </Button>
         </div>
@@ -89,6 +87,7 @@ export function Header() {
             placeholder="Search news..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="border-foreground/20"
           />
         </form>
       </div>

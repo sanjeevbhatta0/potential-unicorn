@@ -4,38 +4,38 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full border-t bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <footer className="w-full bg-foreground text-white">
+      <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* About */}
           <div>
-            <h3 className="mb-4 text-lg font-semibold">Nepali News Hub</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="font-serif text-xl font-bold mb-4">Nepali News Hub</h3>
+            <p className="text-sm text-gray-400">
               Your trusted source for the latest news from Nepal and around the world.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="mb-4 text-lg font-semibold">Quick Links</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wide mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/" className="text-muted-foreground hover:text-primary">
+                <Link href="/" className="text-gray-400 hover:text-white transition-colors">
                   Home
                 </Link>
               </li>
               <li>
-                <Link href="/categories/politics" className="text-muted-foreground hover:text-primary">
+                <Link href="/categories/politics" className="text-gray-400 hover:text-white transition-colors">
                   Politics
                 </Link>
               </li>
               <li>
-                <Link href="/categories/business" className="text-muted-foreground hover:text-primary">
+                <Link href="/categories/business" className="text-gray-400 hover:text-white transition-colors">
                   Business
                 </Link>
               </li>
               <li>
-                <Link href="/categories/sports" className="text-muted-foreground hover:text-primary">
+                <Link href="/categories/sports" className="text-gray-400 hover:text-white transition-colors">
                   Sports
                 </Link>
               </li>
@@ -44,25 +44,25 @@ export function Footer() {
 
           {/* Categories */}
           <div>
-            <h3 className="mb-4 text-lg font-semibold">Categories</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wide mb-4">Categories</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/categories/technology" className="text-muted-foreground hover:text-primary">
+                <Link href="/categories/technology" className="text-gray-400 hover:text-white transition-colors">
                   Technology
                 </Link>
               </li>
               <li>
-                <Link href="/categories/entertainment" className="text-muted-foreground hover:text-primary">
+                <Link href="/categories/entertainment" className="text-gray-400 hover:text-white transition-colors">
                   Entertainment
                 </Link>
               </li>
               <li>
-                <Link href="/categories/health" className="text-muted-foreground hover:text-primary">
+                <Link href="/categories/health" className="text-gray-400 hover:text-white transition-colors">
                   Health
                 </Link>
               </li>
               <li>
-                <Link href="/categories/education" className="text-muted-foreground hover:text-primary">
+                <Link href="/categories/education" className="text-gray-400 hover:text-white transition-colors">
                   Education
                 </Link>
               </li>
@@ -71,25 +71,25 @@ export function Footer() {
 
           {/* Connect */}
           <div>
-            <h3 className="mb-4 text-lg font-semibold">Connect</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wide mb-4">Connect</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
                   Facebook
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
                   Twitter
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
                   Instagram
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
                   YouTube
                 </a>
               </li>
@@ -97,7 +97,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
+        <div className="mt-12 pt-8 border-t border-gray-800 text-center text-sm text-gray-400">
           <p>&copy; {currentYear} Nepali News Hub. All rights reserved.</p>
         </div>
       </div>

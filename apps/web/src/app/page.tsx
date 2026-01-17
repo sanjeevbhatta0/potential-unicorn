@@ -8,12 +8,12 @@ import { useState } from 'react';
 import { Category } from '@potential-unicorn/types';
 
 // Category configuration
-const CATEGORIES: { id: Category; label: string; icon: string; color: string }[] = [
-  { id: 'politics', label: 'Politics', icon: '🏛️', color: 'from-blue-500 to-indigo-600' },
-  { id: 'sports', label: 'Sports', icon: '⚽', color: 'from-green-500 to-emerald-600' },
-  { id: 'business', label: 'Business', icon: '💼', color: 'from-amber-500 to-orange-600' },
-  { id: 'technology', label: 'Technology', icon: '💻', color: 'from-purple-500 to-violet-600' },
-  { id: 'entertainment', label: 'Entertainment', icon: '🎬', color: 'from-pink-500 to-rose-600' },
+const CATEGORIES: { id: Category; label: string }[] = [
+  { id: 'politics', label: 'Politics' },
+  { id: 'sports', label: 'Sports' },
+  { id: 'business', label: 'Business' },
+  { id: 'technology', label: 'Technology' },
+  { id: 'entertainment', label: 'Entertainment' },
 ];
 
 export default function HomePage() {
@@ -33,66 +33,67 @@ export default function HomePage() {
   const featuredArticle = trendingArticles?.[0];
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section with Featured Article */}
+    <div className="min-h-screen bg-background">
+      {/* Featured Article */}
       {featuredArticle && (
-        <section className="relative mb-12">
-          <div className="absolute inset-0 gradient-hero opacity-95" />
-          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-          <div className="container mx-auto px-4 py-16 relative z-10">
-            <div className="flex items-center gap-2 mb-6">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-white text-sm font-medium">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                Breaking News
+        <section className="border-b border-border bg-white">
+          <div className="container mx-auto px-4 py-12">
+            <div className="mb-6">
+              <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
+                <span className="w-2 h-2 bg-primary" />
+                Featured Story
               </span>
-              <span className="text-white/60 text-sm">Updated just now</span>
             </div>
             <ArticleCard article={featuredArticle} variant="featured" />
           </div>
         </section>
       )}
 
-      {/* Category Pills */}
-      <div className="container mx-auto px-4 mb-8">
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setActiveCategory(null)}
-            className={`px-5 py-2.5 rounded-full font-medium text-sm transition-all duration-300 ${!activeCategory
-              ? 'gradient-primary text-white shadow-lg scale-105'
-              : 'glass text-foreground hover:shadow-md hover:scale-105'
-              }`}
-          >
-            🌐 All News
-          </button>
-          {CATEGORIES.map((cat) => (
+      {/* Category Navigation */}
+      <div className="border-b border-border bg-white">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-1 py-4 overflow-x-auto">
             <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`px-5 py-2.5 rounded-full font-medium text-sm transition-all duration-300 ${activeCategory === cat.id
-                ? `bg-gradient-to-r ${cat.color} text-white shadow-lg scale-105`
-                : 'glass text-foreground hover:shadow-md hover:scale-105'
-                }`}
+              onClick={() => setActiveCategory(null)}
+              className={`px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                !activeCategory
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
             >
-              {cat.icon} {cat.label}
+              All
             </button>
-          ))}
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                  activeCategory === cat.id
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Main Content */}
           <div className="lg:col-span-2">
             <section>
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-border">
                 <div>
-                  <h2 className="text-3xl font-bold text-gradient">
+                  <h2 className="font-serif text-3xl font-bold">
                     {activeCategory
                       ? CATEGORIES.find(c => c.id === activeCategory)?.label || 'News'
                       : 'Latest News'
                     }
                   </h2>
-                  <p className="text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     AI-verified stories from trusted sources
                   </p>
                 </div>
@@ -102,18 +103,16 @@ export default function HomePage() {
                     size="sm"
                     disabled={page === 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="rounded-full glass border-0 hover:shadow-md"
                   >
-                    ← Previous
+                    Previous
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={!articlesData || page >= articlesData.totalPages}
                     onClick={() => setPage((p) => p + 1)}
-                    className="rounded-full glass border-0 hover:shadow-md"
                   >
-                    Next →
+                    Next
                   </Button>
                 </div>
               </div>
@@ -126,17 +125,13 @@ export default function HomePage() {
 
               {/* Pagination Info */}
               {articlesData && (
-                <div className="mt-10 text-center">
-                  <div className="inline-flex items-center gap-4 px-6 py-3 rounded-full glass">
-                    <span className="text-sm text-muted-foreground">
-                      Page <span className="font-bold text-foreground">{page}</span> of{' '}
-                      <span className="font-bold text-foreground">{articlesData.totalPages}</span>
-                    </span>
-                    <span className="w-px h-4 bg-border" />
-                    <span className="text-sm text-muted-foreground">
-                      <span className="font-bold text-primary">{articlesData.total}</span> articles
-                    </span>
-                  </div>
+                <div className="mt-10 pt-6 border-t border-border text-center">
+                  <span className="text-sm text-muted-foreground">
+                    Page <span className="font-bold text-foreground">{page}</span> of{' '}
+                    <span className="font-bold text-foreground">{articlesData.totalPages}</span>
+                    {' | '}
+                    <span className="font-bold text-primary">{articlesData.total}</span> articles
+                  </span>
                 </div>
               )}
             </section>
@@ -148,10 +143,6 @@ export default function HomePage() {
           </aside>
         </div>
       </div>
-
-      {/* Footer gradient */}
-      <div className="h-32 bg-gradient-to-t from-primary/5 to-transparent" />
     </div>
   );
 }
-
