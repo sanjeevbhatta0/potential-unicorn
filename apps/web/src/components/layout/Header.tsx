@@ -6,6 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/app/providers';
+import { useAuth } from '@/contexts/AuthContext';
+import { SignInDialog } from '../auth/SignInDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Sun icon for light mode
 function SunIcon() {
@@ -57,12 +68,19 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
+  };
+
+  const getUserInitials = () => {
+    if (!user) return 'U';
+    if (user.fullName) return user.fullName.charAt(0).toUpperCase();
+    return user.email.charAt(0).toUpperCase();
   };
 
   return (
@@ -97,9 +115,38 @@ export function Header() {
             </div>
           </form>
 
-          <Button variant="default" size="sm" className="font-semibold">
-            Sign In
-          </Button>
+          {isAuthenticated && user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    {/* Placeholder for avatarUrl if available */}
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.fullName || 'User'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => logout()}>
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <SignInDialog>
+              <Button variant="default" size="sm" className="font-semibold">
+                Sign In
+              </Button>
+            </SignInDialog>
+          )}
         </div>
       </div>
 

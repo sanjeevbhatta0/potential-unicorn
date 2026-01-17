@@ -120,17 +120,19 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // Effect 1: Increment View Count
+  useEffect(() => {
+    incrementViewCount.mutate(article.id);
+  }, [article.id, incrementViewCount]);
+
+  // Effect 2: AI Summary Logic
   useEffect(() => {
     let isMounted = true;
     let progressCleanup: (() => void) | undefined;
-
-    // Increment view count once
-    incrementViewCount.mutate(article.id);
+    const articleData = article as any;
 
     const loadAISummary = async () => {
-      const articleData = article as any;
-
-      // Check if AI data already exists
+      // Check if AI data already exists (from DB/prop)
       if (articleData.aiSummary) {
         if (isMounted) {
           setSummaryData({
@@ -217,7 +219,8 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
         progressCleanup();
       }
     };
-  }, [article.id, simulateProgress]);
+  }, [article.id, simulateProgress, article]); // Kept `article` to catch updates, but logic guards against loops via checks
+
 
   return (
     <article className="max-w-4xl mx-auto px-4">
@@ -343,7 +346,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
               href={article.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
             >
               Read on {sourceInfo.name}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

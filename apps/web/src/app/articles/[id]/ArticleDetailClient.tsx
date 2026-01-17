@@ -35,7 +35,8 @@ export function ArticleDetailClient({ articleId }: ArticleDetailClientProps) {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-2xl font-bold mb-4">Article Not Found</h1>
           <p className="text-muted-foreground mb-8">
-            The article you're looking for doesn't exist or has been removed.
+            The article you&apos;re looking for doesn&apos;t exist or has been removed.
+
           </p>
           <a
             href="/"
