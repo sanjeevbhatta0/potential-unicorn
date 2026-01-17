@@ -7,6 +7,7 @@ import { ArticlesModule } from './articles/articles.module';
 import { SourcesModule } from './sources/sources.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { AISettingsModule } from './ai-settings/ai-settings.module';
 import { databaseConfig } from './config/database.config';
 import { jwtConfig } from './config/jwt.config';
 import { appConfig } from './config/app.config';
@@ -35,8 +36,8 @@ import { appConfig } from './config/app.config';
         logging: configService.get('database.logging'),
         ssl: configService.get('database.ssl')
           ? {
-              rejectUnauthorized: false,
-            }
+            rejectUnauthorized: false,
+          }
           : false,
       }),
       inject: [ConfigService],
@@ -47,8 +48,9 @@ import { appConfig } from './config/app.config';
     SourcesModule,
     UsersModule,
     AuthModule,
+    AISettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
