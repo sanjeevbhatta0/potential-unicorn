@@ -1,51 +1,22 @@
 import 'dotenv/config';
 import cron from 'node-cron';
 import logger from './utils/logger';
-import { OnlineKhabarCrawler } from './crawlers/onlinekhabar.crawler';
-import { EKantipurCrawler } from './crawlers/ekantipur.crawler';
-import { SetopatiCrawler } from './crawlers/setopati.crawler';
-import { BaseCrawler } from './crawlers/base.crawler';
+import { GenericCrawler, Article } from './crawlers/generic.crawler';
+import { fetchSourcesFromAPI, updateLastCrawled, SourceConfig } from './services/source-config.service';
 import articleProcessor from './processors/article.processor';
 import deduplicator from './processors/deduplicator';
 import queueProducer from './queue/producer';
-import { crawlerConfigs } from './config/sources.config';
 
 class CrawlerService {
-  private crawlers: BaseCrawler[] = [];
   private isRunning: boolean = false;
   private cronJob?: cron.ScheduledTask;
 
   constructor() {
-    this.initializeCrawlers();
+    logger.info('Crawler Service initialized');
   }
 
   /**
-   * Initialize all crawlers based on configuration
-   */
-  private initializeCrawlers(): void {
-    logger.info('Initializing crawlers...');
-
-    // Add enabled crawlers
-    if (crawlerConfigs.onlinekhabar.enabled) {
-      this.crawlers.push(new OnlineKhabarCrawler());
-      logger.info('Initialized Online Khabar crawler');
-    }
-
-    if (crawlerConfigs.ekantipur.enabled) {
-      this.crawlers.push(new EKantipurCrawler());
-      logger.info('Initialized eKantipur crawler');
-    }
-
-    if (crawlerConfigs.setopati.enabled) {
-      this.crawlers.push(new SetopatiCrawler());
-      logger.info('Initialized Setopati crawler');
-    }
-
-    logger.info(`Total ${this.crawlers.length} crawlers initialized`);
-  }
-
-  /**
-   * Run crawl operation for all enabled crawlers
+   * Run crawl operation for all enabled sources from the database
    */
   async runCrawl(): Promise<void> {
     if (this.isRunning) {
@@ -61,32 +32,49 @@ class CrawlerService {
     logger.info('========================================');
 
     try {
+      // Fetch sources from the API
+      const sources = await fetchSourcesFromAPI();
+
+      if (sources.length === 0) {
+        logger.warn('No active sources found in database');
+        return;
+      }
+
+      logger.info(`Found ${sources.length} active sources to crawl`);
+
       let totalArticles = 0;
       let totalProcessed = 0;
       let totalUnique = 0;
       let totalQueued = 0;
 
       // Run crawlers sequentially to avoid overwhelming the sources
-      for (const crawler of this.crawlers) {
+      for (const source of sources) {
         try {
-          logger.info(`\n--- Crawling ${crawler['config'].name} ---`);
+          logger.info(`\n--- Crawling ${source.name} ---`);
+
+          // Create crawler for this source
+          const crawler = new GenericCrawler(source);
 
           // Crawl articles
           const articles = await crawler.crawl();
           totalArticles += articles.length;
 
           if (articles.length === 0) {
-            logger.warn(`No articles found for ${crawler['config'].name}`);
+            logger.warn(`No articles found for ${source.name}`);
             continue;
           }
 
-          // Process articles
+          // Process articles - adapt to existing processor interface
           logger.info(`Processing ${articles.length} articles...`);
-          const processedArticles = articleProcessor.processArticles(articles);
+          const adaptedArticles = articles.map(a => ({
+            ...a,
+            source: source.name,
+          }));
+          const processedArticles = articleProcessor.processArticles(adaptedArticles as any);
           totalProcessed += processedArticles.length;
 
           if (processedArticles.length === 0) {
-            logger.warn(`No valid articles after processing for ${crawler['config'].name}`);
+            logger.warn(`No valid articles after processing for ${source.name}`);
             continue;
           }
 
@@ -96,7 +84,7 @@ class CrawlerService {
           totalUnique += uniqueArticles.length;
 
           if (uniqueArticles.length === 0) {
-            logger.info(`All articles were duplicates for ${crawler['config'].name}`);
+            logger.info(`All articles were duplicates for ${source.name}`);
             continue;
           }
 
@@ -105,12 +93,12 @@ class CrawlerService {
           const jobs = await queueProducer.addArticles(uniqueArticles);
           totalQueued += jobs.length;
 
-          // Cleanup crawler resources
-          await crawler.cleanup();
+          // Update last crawled timestamp
+          await updateLastCrawled(source.id);
 
-          logger.info(`✓ ${crawler['config'].name} completed: ${articles.length} crawled, ${uniqueArticles.length} unique, ${jobs.length} queued`);
+          logger.info(`✓ ${source.name} completed: ${articles.length} crawled, ${uniqueArticles.length} unique, ${jobs.length} queued`);
         } catch (error: any) {
-          logger.error(`Error crawling ${crawler['config'].name}: ${error.message}`, {
+          logger.error(`Error crawling ${source.name}: ${error.message}`, {
             stack: error.stack,
           });
         }
@@ -123,6 +111,7 @@ class CrawlerService {
       logger.info('========================================');
       logger.info('Summary:', {
         duration: `${duration}s`,
+        sources: sources.length,
         totalArticles,
         totalProcessed,
         totalUnique,
@@ -201,92 +190,52 @@ class CrawlerService {
       }
     }
 
-    // Cleanup resources
-    for (const crawler of this.crawlers) {
-      await crawler.cleanup();
-    }
-
     // Close queue connection
     await queueProducer.close();
 
-    // Close deduplicator connection
+    // Close deduplicator redis connection
     await deduplicator.close();
 
-    logger.info('Crawler service shut down successfully');
+    logger.info('Crawler service shut down complete');
   }
 }
 
-// Main execution
-async function main() {
-  const service = new CrawlerService();
+// Main entry point
+async function main(): Promise<void> {
+  const crawlerService = new CrawlerService();
 
   // Handle graceful shutdown
-  process.on('SIGTERM', async () => {
-    logger.info('SIGTERM signal received');
-    await service.shutdown();
-    process.exit(0);
-  });
-
   process.on('SIGINT', async () => {
-    logger.info('SIGINT signal received');
-    await service.shutdown();
+    logger.info('Received SIGINT signal');
+    await crawlerService.shutdown();
     process.exit(0);
   });
 
-  // Handle uncaught errors
-  process.on('uncaughtException', (error) => {
-    logger.error('Uncaught exception:', {
-      error: error.message,
-      stack: error.stack,
-    });
-    process.exit(1);
-  });
-
-  process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Unhandled rejection:', {
-      reason,
-      promise,
-    });
-  });
-
-  // Check command line arguments
-  const args = process.argv.slice(2);
-
-  if (args.includes('--once') || args.includes('-o')) {
-    // Run once and exit
-    logger.info('Running in single-run mode');
-    await service.runOnce();
-    await service.shutdown();
+  process.on('SIGTERM', async () => {
+    logger.info('Received SIGTERM signal');
+    await crawlerService.shutdown();
     process.exit(0);
-  } else {
-    // Run with scheduler
-    logger.info('Starting News Crawler Service...');
-    logger.info('========================================');
-    logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    logger.info(`Log Level: ${process.env.LOG_LEVEL || 'info'}`);
-    logger.info(`Crawl Interval: ${process.env.CRAWL_INTERVAL || '*/30 * * * *'}`);
-    logger.info('========================================');
-
-    // Run initial crawl
-    logger.info('Running initial crawl...');
-    await service.runOnce();
-
-    // Start scheduler
-    service.startScheduler();
-
-    logger.info('Service is running. Press Ctrl+C to stop.');
-  }
-}
-
-// Start the service
-if (require.main === module) {
-  main().catch((error) => {
-    logger.error('Failed to start service:', {
-      error: error.message,
-      stack: error.stack,
-    });
-    process.exit(1);
   });
+
+  // Start the crawler
+  logger.info('Starting News Crawler Service (Dynamic Sources)...');
+  logger.info('========================================');
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Log Level: ${process.env.LOG_LEVEL || 'info'}`);
+  logger.info(`Crawl Interval: ${process.env.CRAWL_INTERVAL || '*/30 * * * *'}`);
+  logger.info(`API URL: ${process.env.API_URL || 'http://localhost:3333'}`);
+  logger.info('========================================');
+
+  // Run initial crawl
+  logger.info('Running initial crawl...');
+  await crawlerService.runOnce();
+
+  // Start scheduler
+  crawlerService.startScheduler();
 }
 
-export default CrawlerService;
+// Run the main function
+main().catch(error => {
+  logger.error('Fatal error:', error);
+  process.exit(1);
+});

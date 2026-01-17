@@ -1682,3 +1682,24 @@
 2026-01-17T23:30:03.435479Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@potential-unicorn/api"), path: AnchoredSystemPathBuf("apps/api") }}))
 2026-01-17T23:32:52.640453Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/admin/crawlers/page.tsx")}
 2026-01-17T23:32:52.640481Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@potential-unicorn/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2026-01-17T23:35:35.244406Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-01-17T23:35:35.244441Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-01-17T23:35:40.145892Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-01-17T23:35:40.145902Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-01-17T23:41:16.852447Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/crawler/src/services/source-config.service.ts")}
+2026-01-17T23:41:16.852471Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("news-crawler-service"), path: AnchoredSystemPathBuf("services/crawler") }}))
+2026-01-17T23:41:17.053762Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/crawler/src/services/source-config.service.ts")}
+2026-01-17T23:41:17.053776Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("news-crawler-service"), path: AnchoredSystemPathBuf("services/crawler") }}))
+2026-01-17T23:41:18.753119Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/crawler/src/crawlers/generic.crawler.ts")}
+2026-01-17T23:41:18.753138Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("news-crawler-service"), path: AnchoredSystemPathBuf("services/crawler") }}))
+2026-01-17T23:41:18.852703Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/crawler/src/crawlers/generic.crawler.ts")}
+2026-01-17T23:41:18.852717Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("news-crawler-service"), path: AnchoredSystemPathBuf("services/crawler") }}))
+2026-01-17T23:41:18.954221Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/crawler/src/crawlers/generic.crawler.ts")}
+2026-01-17T23:41:18.954242Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("news-crawler-service"), path: AnchoredSystemPathBuf("services/crawler") }}))
+2026-01-17T23:41:18.979988Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-01-17T23:41:41.554000Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-01-17T23:41:41.554012Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-01-17T23:41:56.053657Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-01-17T23:41:56.053673Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-01-17T23:42:17.655272Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/crawler/src/index.ts")}
+2026-01-17T23:42:17.655293Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("news-crawler-service"), path: AnchoredSystemPathBuf("services/crawler") }}))
