@@ -4,15 +4,30 @@ import {
   IsUUID,
   IsUrl,
   IsOptional,
-  IsEnum,
+  IsIn,
   IsArray,
   IsDateString,
 } from 'class-validator';
 import { Category, Language } from '@potential-unicorn/types';
 
+const CATEGORIES = [
+  'politics',
+  'sports',
+  'entertainment',
+  'business',
+  'technology',
+  'health',
+  'education',
+  'international',
+  'opinion',
+  'general',
+] as const;
+
+const LANGUAGES = ['ne', 'en'] as const;
+
 export class CreateArticleDto {
   @ApiProperty({ description: 'Source ID' })
-  @IsUUID()
+  @IsUUID('all')
   sourceId: string;
 
   @ApiProperty({ description: 'Article title' })
@@ -44,21 +59,10 @@ export class CreateArticleDto {
 
   @ApiProperty({ description: 'Publication date' })
   @IsDateString()
-  publishedAt: Date;
+  publishedAt: string;
 
-  @ApiProperty({ enum: ['politics', 'sports', 'entertainment', 'business', 'technology', 'health', 'education', 'international', 'opinion', 'general'] })
-  @IsEnum([
-    'politics',
-    'sports',
-    'entertainment',
-    'business',
-    'technology',
-    'health',
-    'education',
-    'international',
-    'opinion',
-    'general',
-  ])
+  @ApiProperty({ enum: CATEGORIES })
+  @IsIn(CATEGORIES)
   category: Category;
 
   @ApiProperty({ description: 'Article tags', required: false, type: [String] })
@@ -67,7 +71,7 @@ export class CreateArticleDto {
   @IsString({ each: true })
   tags?: string[];
 
-  @ApiProperty({ enum: ['ne', 'en'] })
-  @IsEnum(['ne', 'en'])
+  @ApiProperty({ enum: LANGUAGES })
+  @IsIn(LANGUAGES)
   language: Language;
 }

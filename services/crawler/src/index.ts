@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import cron from 'node-cron';
 import logger from './utils/logger';
 import { OnlineKhabarCrawler } from './crawlers/onlinekhabar.crawler';
@@ -9,9 +9,6 @@ import articleProcessor from './processors/article.processor';
 import deduplicator from './processors/deduplicator';
 import queueProducer from './queue/producer';
 import { crawlerConfigs } from './config/sources.config';
-
-// Load environment variables
-dotenv.config();
 
 class CrawlerService {
   private crawlers: BaseCrawler[] = [];
@@ -167,7 +164,7 @@ class CrawlerService {
     });
 
     logger.info('Cron scheduler started successfully');
-    logger.info(`Next crawl will run at: ${this.cronJob.nextDate()?.toString()}`);
+    logger.info(`Crawler will run on schedule: ${cronExpression}`);
   }
 
   /**

@@ -118,7 +118,61 @@ export class QueueProducer {
         headers['Authorization'] = `Bearer ${apiKey}`;
       }
 
-      const response = await axios.post(endpoint, article, {
+      // Map source name to sourceId
+      const sourceIds: Record<string, string> = {
+        'Online Khabar': '550e8400-e29b-41d4-a716-446655440001',
+        'eKantipur': '550e8400-e29b-41d4-a716-446655440002',
+        'Setopati': '550e8400-e29b-41d4-a716-446655440003',
+      };
+
+      // Map category to valid enum value
+      const categoryMap: Record<string, string> = {
+        'politics': 'politics',
+        'राजनीति': 'politics',
+        'समाचार': 'general',
+        'sports': 'sports',
+        'खेलकुद': 'sports',
+        'entertainment': 'entertainment',
+        'मनोरञ्जन': 'entertainment',
+        'business': 'business',
+        'अर्थ/वाणिज्य': 'business',
+        'technology': 'technology',
+        'प्रविधि': 'technology',
+        'health': 'health',
+        'स्वास्थ्य': 'health',
+        'education': 'education',
+        'शिक्षा': 'education',
+        'international': 'international',
+        'अन्तर्राष्ट्रिय': 'international',
+        'opinion': 'opinion',
+        'विचार': 'opinion',
+      };
+
+      const mappedCategory = categoryMap[article.category?.toLowerCase() || ''] || 'general';
+      const mappedLanguage = article.language === 'mixed' ? 'ne' : article.language;
+
+      // Transform to API format
+      const apiPayload = {
+        sourceId: sourceIds[article.source] || sourceIds['Online Khabar'],
+        title: article.title,
+        content: article.content,
+        url: article.url,
+        imageUrl: article.image,
+        author: article.author,
+        publishedAt: article.publishDate ? new Date(article.publishDate).toISOString() : new Date().toISOString(),
+        category: mappedCategory,
+        tags: article.tags,
+        language: mappedLanguage,
+      };
+
+      logger.info(`DEBUG: Sending article to API`, {
+        source: article.source,
+        sourceId: apiPayload.sourceId,
+        publishedAt: apiPayload.publishedAt,
+        category: apiPayload.category,
+      });
+
+      const response = await axios.post(endpoint, apiPayload, {
         headers,
         timeout: 30000,
       });

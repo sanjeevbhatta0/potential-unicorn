@@ -135,7 +135,7 @@ export abstract class BaseCrawler {
   /**
    * Extract article links from listing page
    */
-  protected extractArticleLinks($: cheerio.CheerioAPI): string[] {
+  protected extractArticleLinks($: ReturnType<typeof cheerio.load>): string[] {
     const links: string[] = [];
     const { articleList, articleLink } = this.config.selectors;
 
@@ -158,7 +158,7 @@ export abstract class BaseCrawler {
   /**
    * Extract article data from article page
    */
-  protected extractArticleData($: cheerio.CheerioAPI, url: string): Article | null {
+  protected extractArticleData($: ReturnType<typeof cheerio.load>, url: string): Article | null {
     try {
       const selectors = this.config.selectors;
 

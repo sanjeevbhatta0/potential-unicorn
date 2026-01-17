@@ -11,10 +11,13 @@ export class SetopatiCrawler extends BaseCrawler {
   /**
    * Custom extraction for Setopati specific features
    */
-  protected extractArticleData($: cheerio.CheerioAPI, url: string): Article | null {
+  protected extractArticleData($: ReturnType<typeof cheerio.load>, url: string): Article | null {
     try {
       // Try multiple selectors for title
-      let title = $('h1.news-title').first().text().trim();
+      let title = $('h1.news-big-title').first().text().trim();
+      if (!title) {
+        title = $('h1.entry-title').first().text().trim();
+      }
       if (!title) {
         title = $('h1').first().text().trim();
       }
@@ -22,7 +25,7 @@ export class SetopatiCrawler extends BaseCrawler {
         title = $('.main-title').first().text().trim();
       }
       if (!title) {
-        title = $('meta[property="og:title"]').attr('content')?.trim();
+        title = $('meta[property="og:title"]').attr('content')?.trim() ?? '';
       }
 
       if (!title) {
@@ -33,14 +36,22 @@ export class SetopatiCrawler extends BaseCrawler {
       // Extract content - Setopati specific
       const contentParagraphs: string[] = [];
 
-      // Try the main content selectors
-      $('.news-content p, #newsContent p').each((_, el) => {
+      // Setopati content is usually in .editor-box
+      $('.editor-box p').each((_, el) => {
         const text = $(el).text().trim();
-        // Filter out ads and empty paragraphs
-        if (text && !$(el).hasClass('advertisement') && !$(el).hasClass('ad') && text.length > 20) {
-          contentParagraphs.push(text);
-        }
+        if (text) contentParagraphs.push(text);
       });
+
+      // Try the main content selectors
+      if (contentParagraphs.length === 0) {
+        $('.news-content p, #newsContent p').each((_, el) => {
+          const text = $(el).text().trim();
+          // Filter out ads and empty paragraphs
+          if (text && !$(el).hasClass('advertisement') && !$(el).hasClass('ad') && text.length > 20) {
+            contentParagraphs.push(text);
+          }
+        });
+      }
 
       // Fallback to other selectors
       if (contentParagraphs.length === 0) {
@@ -77,7 +88,7 @@ export class SetopatiCrawler extends BaseCrawler {
         author = $('span[itemprop="author"]').first().text().trim();
       }
       if (!author) {
-        author = $('meta[name="author"]').attr('content')?.trim();
+        author = $('meta[name="author"]').attr('content')?.trim() ?? '';
       }
 
       // Clean up author name (remove "Reporter:" or similar prefixes)
@@ -155,7 +166,7 @@ export class SetopatiCrawler extends BaseCrawler {
   /**
    * Custom article link extraction for Setopati
    */
-  protected extractArticleLinks($: cheerio.CheerioAPI): string[] {
+  protected extractArticleLinks($: ReturnType<typeof cheerio.load>): string[] {
     const links: string[] = [];
 
     // Try multiple selectors for article containers

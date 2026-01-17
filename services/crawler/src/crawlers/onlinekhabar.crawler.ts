@@ -11,13 +11,10 @@ export class OnlineKhabarCrawler extends BaseCrawler {
   /**
    * Custom extraction for Online Khabar specific features
    */
-  protected extractArticleData($: cheerio.CheerioAPI, url: string): Article | null {
+  protected extractArticleData($: ReturnType<typeof cheerio.load>, url: string): Article | null {
     try {
       // Try multiple selectors for title
-      let title = $('h1.ok18-single-post-title').first().text().trim();
-      if (!title) {
-        title = $('h1.ok-news-title').first().text().trim();
-      }
+      let title = $('h1.entry-title').first().text().trim();
       if (!title) {
         title = $('h1').first().text().trim();
       }
@@ -31,20 +28,12 @@ export class OnlineKhabarCrawler extends BaseCrawler {
       const contentParagraphs: string[] = [];
 
       // Try the main content selectors
-      $('.ok18-single-post-content p').each((_, el) => {
+      $('.ok18-single-post-content-wrap > p').each((_, el) => {
         const text = $(el).text().trim();
         if (text && !$(el).hasClass('advertisement')) {
           contentParagraphs.push(text);
         }
       });
-
-      // Fallback to other selectors
-      if (contentParagraphs.length === 0) {
-        $('.ok-news-post-content p').each((_, el) => {
-          const text = $(el).text().trim();
-          if (text) contentParagraphs.push(text);
-        });
-      }
 
       const content = contentParagraphs.join('\n\n');
 
@@ -117,7 +106,7 @@ export class OnlineKhabarCrawler extends BaseCrawler {
   /**
    * Custom article link extraction for Online Khabar
    */
-  protected extractArticleLinks($: cheerio.CheerioAPI): string[] {
+  protected extractArticleLinks($: ReturnType<typeof cheerio.load>): string[] {
     const links: string[] = [];
 
     // Try multiple selectors for article containers

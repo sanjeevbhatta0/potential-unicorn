@@ -11,10 +11,16 @@ export class EKantipurCrawler extends BaseCrawler {
   /**
    * Custom extraction for eKantipur specific features
    */
-  protected extractArticleData($: cheerio.CheerioAPI, url: string): Article | null {
+  protected extractArticleData($: ReturnType<typeof cheerio.load>, url: string): Article | null {
     try {
       // Try multiple selectors for title
       let title = $('h1.article-title').first().text().trim();
+      if (!title) {
+        title = $('h1.article-header').first().text().trim();
+      }
+      if (!title) {
+        title = $('div.article-header > h1').first().text().trim();
+      }
       if (!title) {
         title = $('h1.title').first().text().trim();
       }
@@ -22,7 +28,7 @@ export class EKantipurCrawler extends BaseCrawler {
         title = $('h1').first().text().trim();
       }
       if (!title) {
-        title = $('meta[property="og:title"]').attr('content')?.trim();
+        title = $('meta[property="og:title"]').attr('content')?.trim() ?? '';
       }
 
       if (!title) {
@@ -34,7 +40,7 @@ export class EKantipurCrawler extends BaseCrawler {
       const contentParagraphs: string[] = [];
 
       // Try the main content selectors
-      $('.article-content p').each((_, el) => {
+      $('.description p, .article-text p').each((_, el) => {
         const text = $(el).text().trim();
         if (text && !$(el).hasClass('advertisement') && !$(el).hasClass('ad')) {
           contentParagraphs.push(text);
@@ -73,7 +79,7 @@ export class EKantipurCrawler extends BaseCrawler {
         author = $('span[itemprop="author"] span[itemprop="name"]').first().text().trim();
       }
       if (!author) {
-        author = $('meta[name="author"]').attr('content')?.trim();
+        author = $('meta[name="author"]').attr('content')?.trim() ?? '';
       }
 
       // Extract publish date
@@ -146,7 +152,7 @@ export class EKantipurCrawler extends BaseCrawler {
   /**
    * Custom article link extraction for eKantipur
    */
-  protected extractArticleLinks($: cheerio.CheerioAPI): string[] {
+  protected extractArticleLinks($: ReturnType<typeof cheerio.load>): string[] {
     const links: string[] = [];
 
     // Try multiple selectors for article containers

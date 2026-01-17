@@ -43,12 +43,12 @@ export const crawlerConfigs: Record<string, CrawlerConfig> = {
       tags: '.ok-tags a, .ok-news-tags a'
     },
     rateLimit: {
-      requestsPerMinute: 10,
-      delayBetweenRequests: 6000
+      requestsPerMinute: 60,
+      delayBetweenRequests: 1000
     },
     pagination: {
       enabled: true,
-      maxPages: 5,
+      maxPages: 1,
       pageUrlPattern: 'https://www.onlinekhabar.com/page/{page}'
     },
     usePlaywright: false
@@ -70,12 +70,12 @@ export const crawlerConfigs: Record<string, CrawlerConfig> = {
       tags: '.tags a, .article-tags a'
     },
     rateLimit: {
-      requestsPerMinute: 10,
-      delayBetweenRequests: 6000
+      requestsPerMinute: 60,
+      delayBetweenRequests: 1000
     },
     pagination: {
       enabled: true,
-      maxPages: 5,
+      maxPages: 1,
       nextPageSelector: '.pagination .next'
     },
     usePlaywright: false
@@ -97,12 +97,12 @@ export const crawlerConfigs: Record<string, CrawlerConfig> = {
       tags: '.tags a, .news-tags a'
     },
     rateLimit: {
-      requestsPerMinute: 10,
-      delayBetweenRequests: 6000
+      requestsPerMinute: 60,
+      delayBetweenRequests: 1000
     },
     pagination: {
       enabled: true,
-      maxPages: 5,
+      maxPages: 1,
       pageUrlPattern: 'https://www.setopati.com/page/{page}'
     },
     usePlaywright: false

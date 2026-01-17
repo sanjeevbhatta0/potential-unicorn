@@ -34,7 +34,7 @@ export function useArticles(params?: ArticleQueryParams) {
           }
         });
       }
-      return api.get<ArticlesResponse>(`/api/articles?${queryParams.toString()}`);
+      return api.get<ArticlesResponse>(`/articles?${queryParams.toString()}`);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -44,7 +44,7 @@ export function useArticles(params?: ArticleQueryParams) {
 export function useArticle(id: string) {
   return useQuery({
     queryKey: articleKeys.detail(id),
-    queryFn: () => api.get<Article>(`/api/articles/${id}`),
+    queryFn: () => api.get<Article>(`/articles/${id}`),
     enabled: !!id,
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
@@ -55,7 +55,7 @@ export function useTrendingArticles(limit: number = 10) {
   return useQuery({
     queryKey: articleKeys.trending(),
     queryFn: () =>
-      api.get<Article[]>('/api/articles/trending', {
+      api.get<Article[]>('/articles/trending', {
         params: { limit },
       }),
     staleTime: 1000 * 60 * 3, // 3 minutes
@@ -67,7 +67,7 @@ export function useSearchArticles(query: string) {
   return useQuery({
     queryKey: articleKeys.search(query),
     queryFn: () =>
-      api.get<ArticlesResponse>('/api/articles/search', {
+      api.get<ArticlesResponse>('/articles/search', {
         params: { q: query },
       }),
     enabled: query.length > 0,
@@ -81,7 +81,7 @@ export function useIncrementViewCount() {
 
   return useMutation({
     mutationFn: (articleId: string) =>
-      api.post(`/api/articles/${articleId}/view`),
+      api.post(`/articles/${articleId}/view`),
     onSuccess: (_, articleId) => {
       // Invalidate article detail query to refetch with updated view count
       queryClient.invalidateQueries({ queryKey: articleKeys.detail(articleId) });

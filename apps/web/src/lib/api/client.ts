@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api/v1',
   timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -61,22 +61,31 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Helper to unwrap API response
+const unwrapResponse = <T>(response: any): T => {
+  // API returns {success: true, data: {...}} wrapper
+  if (response && typeof response === 'object' && 'success' in response && 'data' in response) {
+    return response.data as T;
+  }
+  return response as T;
+};
+
 // Generic API methods
 export const api = {
   get: <T = any>(url: string, config?: AxiosRequestConfig) =>
-    apiClient.get<T>(url, config).then((res) => res.data),
+    apiClient.get(url, config).then((res) => unwrapResponse<T>(res.data)),
 
   post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig) =>
-    apiClient.post<T>(url, data, config).then((res) => res.data),
+    apiClient.post(url, data, config).then((res) => unwrapResponse<T>(res.data)),
 
   put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig) =>
-    apiClient.put<T>(url, data, config).then((res) => res.data),
+    apiClient.put(url, data, config).then((res) => unwrapResponse<T>(res.data)),
 
   patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig) =>
-    apiClient.patch<T>(url, data, config).then((res) => res.data),
+    apiClient.patch(url, data, config).then((res) => unwrapResponse<T>(res.data)),
 
   delete: <T = any>(url: string, config?: AxiosRequestConfig) =>
-    apiClient.delete<T>(url, config).then((res) => res.data),
+    apiClient.delete(url, config).then((res) => unwrapResponse<T>(res.data)),
 };
 
 export default apiClient;
