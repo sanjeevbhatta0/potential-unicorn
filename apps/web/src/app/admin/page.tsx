@@ -28,7 +28,9 @@ export default function AdminDashboard() {
                 });
 
                 if (aiRes.ok) {
-                    const aiSettings = await aiRes.json();
+                    const rawData = await aiRes.json();
+                    // Handle wrapped response: {success, data: [...]}
+                    const aiSettings = Array.isArray(rawData) ? rawData : (rawData.data || []);
                     const defaultModel = aiSettings.find((s: any) => s.isDefault);
                     setStats({
                         totalArticles: 0,

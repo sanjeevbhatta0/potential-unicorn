@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsEnum,
   IsBoolean,
+  IsNumber,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -18,6 +19,7 @@ class CrawlConfigDto {
 
   @ApiProperty({ description: 'Crawl interval in minutes', required: false })
   @IsOptional()
+  @IsNumber()
   interval?: number;
 
   @ApiProperty({ required: false })
@@ -33,6 +35,7 @@ class CrawlConfigDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsNumber()
   maxArticles?: number;
 
   @ApiProperty({ required: false })
