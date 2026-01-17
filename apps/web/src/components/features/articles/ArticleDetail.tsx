@@ -59,12 +59,13 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
   const incrementViewCount = useIncrementViewCount();
   const bookmarked = isBookmarked(article.id);
 
-  // State for AI summary
+  // State for AI summary and category
   const [isLoadingSummary, setIsLoadingSummary] = useState(true);
   const [summaryData, setSummaryData] = useState<AISummaryData>({
     summary: '',
     key_points: [],
   });
+  const [currentCategory, setCurrentCategory] = useState(article.category);
   const [summaryError, setSummaryError] = useState<string | null>(null);
 
   const credibilityScore = getCredibilityScore(article);
@@ -74,6 +75,8 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
   // Hybrid AI loading: use persisted data if available, otherwise process on-demand
   useEffect(() => {
     incrementViewCount.mutate(article.id);
+    // Reset category when article changes
+    setCurrentCategory(article.category);
 
     const loadAISummary = async () => {
       // Check if article already has AI data (processed at crawl-time or previously viewed)
@@ -109,6 +112,12 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
           summary: data.aiSummary || 'सारांश उपलब्ध छैन',
           key_points: data.aiKeyPoints || [],
         });
+
+        // Update category if returned from AI
+        if (data.category && data.category !== currentCategory) {
+          setCurrentCategory(data.category);
+        }
+
       } catch (err) {
         console.error('AI summary error:', err);
         setSummaryError(err instanceof Error ? err.message : 'सारांश प्राप्त गर्न असफल');
@@ -162,7 +171,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
       <header className="mb-8">
         <div className="mb-4">
           <span className="inline-block px-4 py-1.5 gradient-primary text-white text-sm font-bold rounded-full capitalize">
-            {article.category}
+            {currentCategory}
           </span>
         </div>
         <h1 className="text-4xl font-bold mb-4 leading-tight">{article.title}</h1>

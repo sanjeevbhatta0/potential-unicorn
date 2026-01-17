@@ -1482,3 +1482,12 @@
 2026-01-17T06:44:45.864510Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
 2026-01-17T06:44:50.967257Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("ai_debug_response.json")}
 2026-01-17T06:44:50.967268Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-01-17T06:45:13.264834Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/articles/articles.service.ts")}
+2026-01-17T06:45:13.264871Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@potential-unicorn/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2026-01-17T06:45:23.865800Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/articles/articles.service.ts")}
+2026-01-17T06:45:23.865813Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@potential-unicorn/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2026-01-17T06:45:53.266293Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/features/articles/ArticleDetail.tsx")}
+2026-01-17T06:45:53.266307Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@potential-unicorn/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2026-01-17T06:45:53.379951Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/features/articles/ArticleDetail.tsx")}
+2026-01-17T06:45:53.379972Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@potential-unicorn/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2026-01-17T06:45:53.380034Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun

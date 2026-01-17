@@ -157,6 +157,7 @@ export class ArticlesService {
     aiSummary: string;
     aiKeyPoints: string[];
     credibilityScore: number;
+    category?: string;
   }> {
     const article = await this.findOne(id);
 
@@ -166,6 +167,7 @@ export class ArticlesService {
         aiSummary: article.aiSummary,
         aiKeyPoints: article.aiKeyPoints || [],
         credibilityScore: article.credibilityScore || 7,
+        category: article.category,
       };
     }
 
@@ -248,6 +250,7 @@ export class ArticlesService {
         aiSummary: summaryData.summary,
         aiKeyPoints: keyPoints,
         credibilityScore,
+        category: article.category,
       };
     } catch (error) {
       console.error('AI processing failed:', error);
