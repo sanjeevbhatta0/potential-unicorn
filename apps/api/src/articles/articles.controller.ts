@@ -25,7 +25,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 @ApiTags('articles')
 @Controller('articles')
 export class ArticlesController {
-  constructor(private readonly articlesService: ArticlesService) {}
+  constructor(private readonly articlesService: ArticlesService) { }
 
   @Post()
   @Roles('admin')
@@ -103,5 +103,14 @@ export class ArticlesController {
   @ApiResponse({ status: 404, description: 'Article not found' })
   incrementView(@Param('id') id: string) {
     return this.articlesService.incrementViewCount(id);
+  }
+
+  @Post(':id/process-ai')
+  @Public()
+  @ApiOperation({ summary: 'Process article with AI (on-demand for existing articles)' })
+  @ApiResponse({ status: 200, description: 'AI processing result returned' })
+  @ApiResponse({ status: 404, description: 'Article not found' })
+  processWithAI(@Param('id') id: string) {
+    return this.articlesService.processArticleWithAI(id);
   }
 }

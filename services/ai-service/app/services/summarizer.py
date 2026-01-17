@@ -43,10 +43,13 @@ class SummarizerService:
         """Build system prompt for summarization."""
         word_target = self._get_word_target(request.length)
 
-        prompt = f"""You are an expert content summarizer. Your task is to create clear, concise, and accurate summaries.
+        prompt = f"""You are an expert content summarizer and classifier.
+Your task is to:
+1. Create a clear, concise, and accurate summary of approximately {word_target} words
+2. Extract key points
+3. Classify the article into exactly one of these categories: Politics, Sports, Entertainment, Business, Technology, Health, Education, International, Opinion, General
 
 Guidelines:
-- Create a summary of approximately {word_target} words
 - Maintain the main ideas and key information
 - Use clear and professional language
 - Preserve important facts and figures
@@ -56,7 +59,7 @@ Guidelines:
             prompt += "\n- After the summary, provide 3-5 key points as a bulleted list"
 
         if request.language.value != "en":
-            prompt += f"\n- Write the summary in {request.language.value.upper()} language"
+            prompt += f"\n- Write the summary and key points in {request.language.value.upper()} language, but keep the category in ENGLISH"
 
         return prompt
 
@@ -67,10 +70,10 @@ Guidelines:
         if request.article.title:
             content = f"Title: {request.article.title}\n\n{content}"
 
-        prompt = f"Please summarize the following article:\n\n{content}"
+        prompt = f"Please summarize and classify the following article:\n\n{content}"
 
         if request.key_points:
-            prompt += "\n\nProvide the summary followed by key points in this format:\n[SUMMARY]\n<summary text>\n\n[KEY POINTS]\n- Point 1\n- Point 2\n- Point 3"
+            prompt += "\n\nProvide the output in this format:\n[SUMMARY]\n<summary text>\n\n[KEY POINTS]\n- Point 1\n- Point 2\n- Point 3\n\n[CATEGORY]\n<category name>"
 
         return prompt
 
@@ -80,7 +83,7 @@ Guidelines:
         retry=retry_if_exception_type((APIError, APITimeoutError, RateLimitError)),
         before_sleep=before_sleep_log(logger, "WARNING"),
     )
-    async def _summarize_with_claude(self, request: SummarizeRequest) -> Tuple[str, Optional[List[str]]]:
+    async def _summarize_with_claude(self, request: SummarizeRequest) -> Tuple[str, Optional[List[str]], Optional[str]]:
         """Summarize using Claude API with retry logic."""
         if not self.anthropic_client:
             raise ValueError("Anthropic API key not configured")
@@ -104,10 +107,10 @@ Guidelines:
             content = response.content[0].text
             logger.info(f"Claude API response received. Tokens used: {response.usage.input_tokens + response.usage.output_tokens}")
 
-            # Parse summary and key points
-            summary, key_points = self._parse_response(content, request.key_points)
+            # Parse summary, key points, and category
+            summary, key_points, category = self._parse_response(content, request.key_points)
 
-            return summary, key_points
+            return summary, key_points, category
 
         except RateLimitError as e:
             logger.warning(f"Rate limit hit: {e}")
@@ -128,7 +131,7 @@ Guidelines:
         retry=retry_if_exception_type(OpenAIAPIError),
         before_sleep=before_sleep_log(logger, "WARNING"),
     )
-    async def _summarize_with_openai(self, request: SummarizeRequest) -> Tuple[str, Optional[List[str]]]:
+    async def _summarize_with_openai(self, request: SummarizeRequest) -> Tuple[str, Optional[List[str]], Optional[str]]:
         """Summarize using OpenAI API with retry logic."""
         if not self.openai_client:
             raise ValueError("OpenAI API key not configured")
@@ -152,10 +155,10 @@ Guidelines:
             content = response.choices[0].message.content
             logger.info(f"OpenAI API response received. Tokens used: {response.usage.total_tokens}")
 
-            # Parse summary and key points
-            summary, key_points = self._parse_response(content, request.key_points)
+            # Parse summary, key points, and category
+            summary, key_points, category = self._parse_response(content, request.key_points)
 
-            return summary, key_points
+            return summary, key_points, category
 
         except OpenAIAPIError as e:
             logger.error(f"OpenAI API error: {e}")
@@ -164,28 +167,53 @@ Guidelines:
             logger.error(f"Unexpected error in OpenAI summarization: {e}")
             raise
 
-    def _parse_response(self, content: str, extract_key_points: bool) -> Tuple[str, Optional[List[str]]]:
-        """Parse response to extract summary and key points."""
+    def _parse_response(self, content: str, extract_key_points: bool) -> Tuple[str, Optional[List[str]], Optional[str]]:
+        """Parse response to extract summary, key points, and category."""
+        summary = content.strip()
+        key_points = None
+        category = "general"
+
         if not extract_key_points:
-            return content.strip(), None
+            return summary, None, category
 
-        # Try to split by markers
-        if "[SUMMARY]" in content and "[KEY POINTS]" in content:
-            parts = content.split("[KEY POINTS]")
-            summary = parts[0].replace("[SUMMARY]", "").strip()
-            key_points_text = parts[1].strip()
+        # Try to parse with markers
+        try:
+            # Extract Category
+            if "[CATEGORY]" in content:
+                parts = content.split("[CATEGORY]")
+                category_text = parts[1].strip()
+                # Clean up category text (take first line, remove punctuation)
+                category = category_text.split('\n')[0].strip().lower()
+                # Validate against known categories, fallback to general
+                valid_categories = ['politics', 'sports', 'entertainment', 'business', 'technology', 'health', 'education', 'international', 'opinion', 'general']
+                if category not in valid_categories:
+                    # Try to map similar terms or default
+                    category = "general"
+                
+                content = parts[0]
 
-            # Extract bullet points
-            key_points = []
-            for line in key_points_text.split("\n"):
-                line = line.strip()
-                if line.startswith("-") or line.startswith("•"):
-                    key_points.append(line.lstrip("-•").strip())
+            # Extract Key Points
+            if "[KEY POINTS]" in content:
+                parts = content.split("[KEY POINTS]")
+                key_points_text = parts[1].strip()
+                summary = parts[0].replace("[SUMMARY]", "").strip()
 
-            return summary, key_points if key_points else None
+                # Extract bullet points
+                key_points = []
+                for line in key_points_text.split("\n"):
+                    line = line.strip()
+                    if line.startswith("-") or line.startswith("•") or line.startswith("*"):
+                        key_points.append(line.lstrip("-•*").strip())
 
-        # If no markers, return full content as summary
-        return content.strip(), None
+            elif "[SUMMARY]" in content:
+                 summary = content.replace("[SUMMARY]", "").strip()
+
+        except Exception as e:
+            logger.error(f"Error parsing AI response: {e}")
+            # Fallback to returning full content as summary
+            return content.strip(), None, "general"
+
+        return summary, key_points, category
 
     async def summarize(self, request: SummarizeRequest) -> SummarizeResponse:
         """
@@ -206,10 +234,10 @@ Guidelines:
         try:
             # Get summary and key points
             if request.provider == AIProvider.CLAUDE:
-                summary, key_points = await self._summarize_with_claude(request)
+                summary, key_points, category = await self._summarize_with_claude(request)
                 model_used = settings.claude_model
             elif request.provider == AIProvider.OPENAI:
-                summary, key_points = await self._summarize_with_openai(request)
+                summary, key_points, category = await self._summarize_with_openai(request)
                 model_used = settings.openai_model
             else:
                 raise ValueError(f"Unsupported provider: {request.provider}")
@@ -229,6 +257,7 @@ Guidelines:
             return SummarizeResponse(
                 summary=summary,
                 key_points=key_points,
+                category=category,
                 word_count=summary_word_count,
                 original_length=original_length,
                 reduction_ratio=reduction_ratio,

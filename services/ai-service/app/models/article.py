@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field, HttpUrl, field_validator
 class LanguageCode(str, Enum):
     """Supported language codes."""
     EN = "en"
+    NE = "ne"  # Nepali
+    HI = "hi"  # Hindi
     ES = "es"
     FR = "fr"
     DE = "de"
@@ -62,6 +64,7 @@ class SummarizeResponse(BaseModel):
     """Response model for article summarization."""
     summary: str = Field(..., description="Generated summary")
     key_points: Optional[List[str]] = Field(None, description="Extracted key points")
+    category: Optional[str] = Field(None, description="AI-determined article category")
     word_count: int = Field(..., description="Word count of summary")
     original_length: int = Field(..., description="Original article length")
     reduction_ratio: float = Field(..., description="Reduction ratio (0-1)")

@@ -92,6 +92,16 @@ export class ArticleEntity {
   @Column('simple-array', { nullable: true })
   embedding: number[];
 
+  // AI-generated fields (populated at crawl-time for new articles, or on first view for existing)
+  @Column({ name: 'ai_summary', type: 'text', nullable: true })
+  aiSummary: string;
+
+  @Column('simple-array', { name: 'ai_key_points', nullable: true })
+  aiKeyPoints: string[];
+
+  @Column({ name: 'credibility_score', type: 'int', nullable: true })
+  credibilityScore: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -74,4 +74,20 @@ export class CreateArticleDto {
   @ApiProperty({ enum: LANGUAGES })
   @IsIn(LANGUAGES)
   language: Language;
+
+  // AI-generated fields (optional - populated at crawl-time for new articles)
+  @ApiProperty({ description: 'AI-generated summary in Nepali', required: false })
+  @IsOptional()
+  @IsString()
+  aiSummary?: string;
+
+  @ApiProperty({ description: 'AI-generated key points', required: false, type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  aiKeyPoints?: string[];
+
+  @ApiProperty({ description: 'AI credibility score 1-10', required: false })
+  @IsOptional()
+  credibilityScore?: number;
 }

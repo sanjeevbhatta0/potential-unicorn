@@ -2,6 +2,7 @@ import Queue, { Queue as QueueType, Job, JobOptions } from 'bull';
 import logger from '../utils/logger';
 import { ProcessedArticle } from '../processors/article.processor';
 import axios from 'axios';
+import { processArticleWithAI } from '../services/ai-service';
 
 export interface ArticleJobData {
   article: ProcessedArticle;
@@ -151,8 +152,22 @@ export class QueueProducer {
       const mappedCategory = categoryMap[article.category?.toLowerCase() || ''] || 'general';
       const mappedLanguage = article.language === 'mixed' ? 'ne' : article.language;
 
+      // Process with AI before saving (for new articles)
+      const aiResult = await processArticleWithAI(article.title, article.content, article.url);
+
+      // Determine category: prioritize AI category, fallback to keyword mapping
+      let finalCategory = mappedCategory;
+      if (aiResult && aiResult.category) {
+        const aiCategory = aiResult.category.toLowerCase();
+        // Check if AI category maps to a valid category in our system
+        if (categoryMap[aiCategory]) {
+          finalCategory = categoryMap[aiCategory];
+          logger.info(`Using AI-determined category: ${finalCategory} (was: ${mappedCategory})`);
+        }
+      }
+
       // Transform to API format
-      const apiPayload = {
+      const apiPayload: any = {
         sourceId: sourceIds[article.source] || sourceIds['Online Khabar'],
         title: article.title,
         content: article.content,
@@ -160,10 +175,18 @@ export class QueueProducer {
         imageUrl: article.image,
         author: article.author,
         publishedAt: article.publishDate ? new Date(article.publishDate).toISOString() : new Date().toISOString(),
-        category: mappedCategory,
+        category: finalCategory,
         tags: article.tags,
         language: mappedLanguage,
       };
+
+      // Add AI data if processing succeeded
+      if (aiResult) {
+        apiPayload.aiSummary = aiResult.aiSummary;
+        apiPayload.aiKeyPoints = aiResult.aiKeyPoints;
+        apiPayload.credibilityScore = aiResult.credibilityScore;
+        logger.info(`AI data added: score=${aiResult.credibilityScore}`);
+      }
 
       logger.info(`DEBUG: Sending article to API`, {
         source: article.source,

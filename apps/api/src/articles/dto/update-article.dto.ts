@@ -83,4 +83,20 @@ export class UpdateArticleDto {
   @IsOptional()
   @IsBoolean()
   isTrending?: boolean;
+
+  // AI-generated fields (for on-demand processing of existing articles)
+  @ApiProperty({ description: 'AI-generated summary in Nepali', required: false })
+  @IsOptional()
+  @IsString()
+  aiSummary?: string;
+
+  @ApiProperty({ description: 'AI-generated key points', required: false, type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  aiKeyPoints?: string[];
+
+  @ApiProperty({ description: 'AI credibility score 1-10', required: false })
+  @IsOptional()
+  credibilityScore?: number;
 }
