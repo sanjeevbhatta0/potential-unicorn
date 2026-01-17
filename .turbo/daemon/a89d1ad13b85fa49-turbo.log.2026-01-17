@@ -1529,3 +1529,13 @@
 2026-01-17T21:00:11.641222Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
 2026-01-17T21:00:11.842237Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cookies/3.cookie")}
 2026-01-17T21:00:11.842252Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-01-17T21:09:39.038690Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/crawler/src/crawlers/setopati.crawler.ts")}
+2026-01-17T21:09:39.038769Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("news-crawler-service"), path: AnchoredSystemPathBuf("services/crawler") }}))
+2026-01-17T21:09:54.137666Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/crawler/src/crawlers/setopati.crawler.ts")}
+2026-01-17T21:09:54.137687Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("news-crawler-service"), path: AnchoredSystemPathBuf("services/crawler") }}))
+2026-01-17T21:10:10.737674Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/crawler/src/crawlers/setopati.crawler.ts")}
+2026-01-17T21:10:10.737690Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("news-crawler-service"), path: AnchoredSystemPathBuf("services/crawler") }}))
+2026-01-17T21:10:27.237873Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cookies/4.cookie")}
+2026-01-17T21:10:27.237893Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-01-17T21:10:27.437799Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cookies/4.cookie")}
+2026-01-17T21:10:27.437812Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))

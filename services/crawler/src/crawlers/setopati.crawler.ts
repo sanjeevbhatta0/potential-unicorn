@@ -171,6 +171,9 @@ export class SetopatiCrawler extends BaseCrawler {
 
     // Try multiple selectors for article containers
     const articleSelectors = [
+      '.items.media',      // Main article items
+      '.featured-item',    // Featured articles
+      '.items.col-md-4',   // Grid items
       '.news-box',
       'article.news-item',
       '.news-list-item',
@@ -180,7 +183,11 @@ export class SetopatiCrawler extends BaseCrawler {
     for (const selector of articleSelectors) {
       $(selector).each((_, element) => {
         // Try multiple link selectors
-        let href = $(element).find('.news-title a').first().attr('href');
+        let href = $(element).find('.main-title a').first().attr('href');
+
+        if (!href) {
+          href = $(element).find('.news-title a').first().attr('href');
+        }
 
         if (!href) {
           href = $(element).find('h2 a, h3 a').first().attr('href');
@@ -205,8 +212,16 @@ export class SetopatiCrawler extends BaseCrawler {
 
           const shouldExclude = excludePatterns.some(pattern => href!.includes(pattern));
 
-          // Setopati articles typically have numbers in URL or specific patterns
-          if (!shouldExclude && (href.includes('/news/') || href.includes('/story/') || /\/\d+/.test(href))) {
+          // Setopati articles have category/id pattern like /politics/379888
+          const articlePatterns = [
+            /\/(politics|social|kinmel|sports|world|ghumphir|art|nepali-brand|blog)\//,
+            /\/news\//,
+            /\/story\//,
+            /\/\d+$/,  // Ends with number
+          ];
+          const isArticle = articlePatterns.some(pattern => pattern.test(href!));
+
+          if (!shouldExclude && isArticle) {
             // Make absolute URL if relative
             if (!href.startsWith('http')) {
               href = new URL(href, this.config.baseUrl).href;
