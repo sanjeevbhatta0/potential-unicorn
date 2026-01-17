@@ -8,39 +8,39 @@ export function Sidebar() {
   const { data: trendingArticles, isLoading } = useTrendingArticles(5);
 
   return (
-    <aside className="space-y-10">
+    <aside className="space-y-6 text-sm">
       {/* Trending Articles */}
       <section>
-        <h3 className="font-serif text-xl font-bold mb-6 pb-2 border-b border-border">
-          Trending Now
+        <h3 className="font-serif text-base font-bold mb-3 pb-2 border-b border-border">
+          Trending
         </h3>
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-200 w-full mb-2" />
-                <div className="h-3 bg-gray-200 w-2/3" />
+                <div className="h-3 bg-gray-200 w-full mb-1" />
+                <div className="h-2 bg-gray-200 w-1/2" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-3">
             {trendingArticles?.map((article, index) => (
               <Link
                 key={article.id}
                 href={`/articles/${article.id}`}
                 className="block group"
               >
-                <div className="flex gap-4">
-                  <span className="text-3xl font-serif font-bold text-gray-200 flex-shrink-0">
-                    {String(index + 1).padStart(2, '0')}
+                <div className="flex gap-2">
+                  <span className="text-lg font-bold text-gray-300 flex-shrink-0 w-5">
+                    {index + 1}
                   </span>
-                  <div className="space-y-1">
-                    <h4 className="font-serif font-semibold leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                  <div>
+                    <h4 className="text-xs font-medium leading-tight group-hover:text-primary transition-colors line-clamp-2">
                       {article.title}
                     </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(article.publishedAt), 'MMM dd, yyyy')}
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {format(new Date(article.publishedAt), 'MMM dd')}
                     </p>
                   </div>
                 </div>
@@ -52,10 +52,10 @@ export function Sidebar() {
 
       {/* Categories */}
       <section>
-        <h3 className="font-serif text-xl font-bold mb-6 pb-2 border-b border-border">
+        <h3 className="font-serif text-base font-bold mb-3 pb-2 border-b border-border">
           Categories
         </h3>
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           {[
             'politics',
             'business',
@@ -69,7 +69,7 @@ export function Sidebar() {
             <Link
               key={category}
               href={`/categories/${category}`}
-              className="block text-muted-foreground hover:text-primary transition-colors capitalize font-medium"
+              className="block text-xs text-muted-foreground hover:text-primary transition-colors capitalize"
             >
               {category}
             </Link>
@@ -78,20 +78,20 @@ export function Sidebar() {
       </section>
 
       {/* Newsletter */}
-      <section className="border-t border-border pt-8">
-        <h3 className="font-serif text-xl font-bold mb-4">
+      <section className="border-t border-border pt-4">
+        <h3 className="font-serif text-base font-bold mb-2">
           Newsletter
         </h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Get the latest news delivered to your inbox.
+        <p className="text-[10px] text-muted-foreground mb-2">
+          Get news delivered to your inbox.
         </p>
-        <div className="space-y-3">
+        <div className="space-y-2">
           <input
             type="email"
             placeholder="Your email"
-            className="flex h-10 w-full border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary"
+            className="flex h-8 w-full border border-border bg-white px-2 py-1 text-xs focus:outline-none focus:border-primary"
           />
-          <button className="w-full h-10 bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors">
+          <button className="w-full h-8 bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors">
             Subscribe
           </button>
         </div>

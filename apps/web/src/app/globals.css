@@ -30,6 +30,28 @@
     --credibility-medium: 38 92% 50%;
     --credibility-low: 0 84% 60%;
   }
+
+  .dark {
+    --background: 0 0% 8%;            /* #141414 */
+    --foreground: 0 0% 95%;           /* #f2f2f2 */
+    --card: 0 0% 12%;                 /* #1f1f1f */
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 276 100% 60%;          /* #a855f7 - brighter purple for dark mode */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;     /* #999999 */
+    --accent: 199 96% 55%;            /* Brighter cyan for dark mode */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 20%;               /* #333333 */
+    --input: 0 0% 20%;
+    --ring: 276 100% 60%;
+  }
 }
 
 @layer base {
@@ -73,6 +95,10 @@
 
   .card-hover:hover {
     @apply bg-gray-50;
+  }
+
+  .dark .card-hover:hover {
+    @apply bg-gray-800;
   }
 
   /* Source badge - clean editorial style */

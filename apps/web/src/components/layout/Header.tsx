@@ -5,10 +5,58 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '@/app/providers';
+
+// Sun icon for light mode
+function SunIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="m4.93 4.93 1.41 1.41" />
+      <path d="m17.66 17.66 1.41 1.41" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="m6.34 17.66-1.41 1.41" />
+      <path d="m19.07 4.93-1.41 1.41" />
+    </svg>
+  );
+}
+
+// Moon icon for dark mode
+function MoonIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+    </svg>
+  );
+}
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +66,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3">
@@ -26,42 +74,17 @@ export function Header() {
           <span className="text-xl font-serif font-bold tracking-tight">Nepali News</span>
         </Link>
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          <Link
-            href="/"
-            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
-          >
-            Home
-          </Link>
-          <Link
-            href="/categories/politics"
-            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
-          >
-            Politics
-          </Link>
-          <Link
-            href="/categories/business"
-            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
-          >
-            Business
-          </Link>
-          <Link
-            href="/categories/sports"
-            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
-          >
-            Sports
-          </Link>
-          <Link
-            href="/categories/entertainment"
-            className="text-sm font-semibold uppercase tracking-wide text-foreground hover:text-primary transition-colors"
-          >
-            Entertainment
-          </Link>
-        </nav>
-
         {/* Search and Actions */}
         <div className="flex items-center space-x-4">
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-foreground transition-colors hover:bg-muted"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
+
           <form onSubmit={handleSearch} className="hidden md:flex">
             <div className="relative">
               <Input
@@ -73,6 +96,7 @@ export function Header() {
               />
             </div>
           </form>
+
           <Button variant="default" size="sm" className="font-semibold">
             Sign In
           </Button>

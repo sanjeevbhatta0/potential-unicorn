@@ -113,4 +113,22 @@ export class ArticlesController {
   processWithAI(@Param('id') id: string) {
     return this.articlesService.processArticleWithAI(id);
   }
+
+  @Post('recategorize/general')
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Re-categorize all articles marked as general' })
+  @ApiResponse({ status: 200, description: 'Re-categorization started' })
+  recategorizeGeneralArticles(@Query('limit') limit?: number) {
+    return this.articlesService.recategorizeGeneralArticles(limit || 50);
+  }
+
+  @Post(':id/recategorize')
+  @Public()
+  @ApiOperation({ summary: 'Re-categorize a single article using keyword detection' })
+  @ApiResponse({ status: 200, description: 'Article re-categorized' })
+  @ApiResponse({ status: 404, description: 'Article not found' })
+  recategorizeArticle(@Param('id') id: string) {
+    return this.articlesService.recategorizeArticle(id);
+  }
 }

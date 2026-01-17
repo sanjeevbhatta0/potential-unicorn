@@ -11,6 +11,55 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { QueryArticleDto } from './dto/query-article.dto';
 import { PaginatedResponse } from '@potential-unicorn/types';
 
+// Keyword mappings for category detection (supports both English and Nepali)
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  'politics': [
+    'government', 'minister', 'parliament', 'election', 'vote', 'party', 'political',
+    'president', 'prime minister', 'congress', 'legislation', 'policy', 'diplomat',
+    'सरकार', 'मन्त्री', 'संसद', 'चुनाव', 'मतदान', 'पार्टी', 'राजनीतिक', 'प्रधानमन्त्री',
+    'नेता', 'दल', 'निर्वाचन', 'राष्ट्रपति', 'कांग्रेस', 'एमाले', 'माओवादी'
+  ],
+  'sports': [
+    'football', 'cricket', 'match', 'game', 'player', 'team', 'score', 'goal',
+    'tournament', 'championship', 'league', 'athlete', 'coach', 'stadium', 'win', 'loss',
+    'खेल', 'फुटबल', 'क्रिकेट', 'खेलाडी', 'टिम', 'गोल', 'प्रतियोगिता', 'च्याम्पियनशिप'
+  ],
+  'entertainment': [
+    'movie', 'film', 'actor', 'actress', 'music', 'song', 'concert', 'celebrity',
+    'bollywood', 'hollywood', 'tv', 'show', 'drama', 'series', 'singer', 'dance',
+    'फिल्म', 'चलचित्र', 'गायक', 'गायिका', 'नायक', 'नायिका', 'गीत', 'संगीत', 'नाटक'
+  ],
+  'business': [
+    'economy', 'market', 'stock', 'company', 'business', 'trade', 'investment',
+    'finance', 'bank', 'price', 'profit', 'loss', 'industry', 'entrepreneur',
+    'अर्थतन्त्र', 'बजार', 'व्यापार', 'कम्पनी', 'बैंक', 'लगानी', 'आर्थिक', 'मूल्य'
+  ],
+  'technology': [
+    'technology', 'tech', 'software', 'app', 'digital', 'internet', 'computer',
+    'ai', 'artificial intelligence', 'mobile', 'startup', 'innovation', 'cyber',
+    'प्रविधि', 'टेक्नोलोजी', 'सफ्टवेयर', 'इन्टरनेट', 'डिजिटल', 'मोबाइल', 'एप'
+  ],
+  'health': [
+    'health', 'hospital', 'doctor', 'medical', 'disease', 'treatment', 'patient',
+    'medicine', 'vaccine', 'covid', 'virus', 'wellness', 'healthcare',
+    'स्वास्थ्य', 'अस्पताल', 'डाक्टर', 'रोग', 'उपचार', 'बिरामी', 'औषधि', 'भ्याक्सिन'
+  ],
+  'education': [
+    'education', 'school', 'university', 'college', 'student', 'teacher', 'exam',
+    'learning', 'academic', 'degree', 'scholarship', 'curriculum',
+    'शिक्षा', 'विद्यालय', 'विश्वविद्यालय', 'विद्यार्थी', 'शिक्षक', 'परीक्षा'
+  ],
+  'international': [
+    'international', 'world', 'global', 'foreign', 'united nations', 'diplomacy',
+    'usa', 'china', 'india', 'europe', 'america', 'asia', 'war', 'conflict',
+    'अन्तर्राष्ट्रिय', 'विश्व', 'विदेश', 'भारत', 'चीन', 'अमेरिका', 'युरोप'
+  ],
+  'opinion': [
+    'opinion', 'editorial', 'column', 'analysis', 'perspective', 'commentary',
+    'view', 'thought', 'विचार', 'सम्पादकीय', 'विश्लेषण', 'टिप्पणी'
+  ],
+};
+
 @Injectable()
 export class ArticlesService {
   constructor(
@@ -256,6 +305,100 @@ export class ArticlesService {
       console.error('AI processing failed:', error);
       throw new BadRequestException('Failed to process article with AI');
     }
+  }
+
+  /**
+   * Detect category from article title and content using keyword matching
+   */
+  private detectCategoryFromKeywords(title: string, content: string): string {
+    const text = `${title} ${content}`.toLowerCase();
+
+    const categoryScores: Record<string, number> = {};
+    for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      const score = keywords.filter(keyword => text.includes(keyword.toLowerCase())).length;
+      if (score > 0) {
+        categoryScores[category] = score;
+      }
+    }
+
+    if (Object.keys(categoryScores).length > 0) {
+      // Return category with highest score
+      const bestCategory = Object.entries(categoryScores).reduce((a, b) =>
+        a[1] > b[1] ? a : b
+      )[0];
+      return bestCategory;
+    }
+
+    return 'general';
+  }
+
+  /**
+   * Re-categorize a single article using keyword detection
+   */
+  async recategorizeArticle(id: string): Promise<{ id: string; oldCategory: string; newCategory: string }> {
+    const article = await this.findOne(id);
+    const oldCategory = article.category;
+
+    const newCategory = this.detectCategoryFromKeywords(
+      article.title,
+      article.content || ''
+    );
+
+    if (newCategory !== oldCategory) {
+      article.category = newCategory as any;
+      await this.articleRepository.save(article);
+    }
+
+    return {
+      id: article.id,
+      oldCategory,
+      newCategory,
+    };
+  }
+
+  /**
+   * Re-categorize all articles marked as "general"
+   */
+  async recategorizeGeneralArticles(limit: number = 50): Promise<{
+    processed: number;
+    recategorized: number;
+    results: Array<{ id: string; title: string; oldCategory: string; newCategory: string }>;
+  }> {
+    // Find articles with "general" category
+    const articles = await this.articleRepository.find({
+      where: { category: 'general' as any },
+      take: limit,
+      order: { publishedAt: 'DESC' },
+    });
+
+    const results: Array<{ id: string; title: string; oldCategory: string; newCategory: string }> = [];
+    let recategorized = 0;
+
+    for (const article of articles) {
+      const newCategory = this.detectCategoryFromKeywords(
+        article.title,
+        article.content || ''
+      );
+
+      if (newCategory !== 'general') {
+        article.category = newCategory as any;
+        await this.articleRepository.save(article);
+        recategorized++;
+      }
+
+      results.push({
+        id: article.id,
+        title: article.title.substring(0, 50) + '...',
+        oldCategory: 'general',
+        newCategory,
+      });
+    }
+
+    return {
+      processed: articles.length,
+      recategorized,
+      results,
+    };
   }
 }
 

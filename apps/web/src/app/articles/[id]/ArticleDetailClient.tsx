@@ -2,7 +2,6 @@
 
 import { useArticle } from '@/lib/hooks/useArticles';
 import { ArticleDetail } from '@/components/features/articles';
-import { Sidebar } from '@/components/layout/Sidebar';
 
 interface ArticleDetailClientProps {
   articleId: string;
@@ -51,16 +50,8 @@ export function ArticleDetailClient({ articleId }: ArticleDetailClientProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2">
-          <ArticleDetail article={article} />
-        </div>
-
-        {/* Sidebar */}
-        <aside className="lg:col-span-1">
-          <Sidebar />
-        </aside>
+      <div className="max-w-4xl mx-auto">
+        <ArticleDetail article={article} />
       </div>
     </div>
   );

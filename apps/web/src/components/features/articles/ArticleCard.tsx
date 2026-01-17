@@ -41,9 +41,9 @@ export function ArticleCard({ article, variant = 'default' }: ArticleCardProps) 
   if (variant === 'compact') {
     return (
       <Link href={`/articles/${article.id}`} className="block group">
-        <div className="flex gap-4 py-4 border-b border-border card-hover">
+        <div className="flex gap-4 py-4 px-3 border-b border-border card-hover">
           {article.imageUrl && (
-            <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden bg-gray-100">
+            <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden bg-muted">
               <Image
                 src={article.imageUrl}
                 alt={article.title}
@@ -75,9 +75,9 @@ export function ArticleCard({ article, variant = 'default' }: ArticleCardProps) 
   if (variant === 'featured') {
     return (
       <Link href={`/articles/${article.id}`} className="block group">
-        <article className="bg-white">
+        <article className="bg-card">
           {/* Top metadata bar */}
-          <div className="flex items-center justify-between py-2 text-sm">
+          <div className="flex items-center justify-between py-2 px-3 text-sm">
             <span className="text-muted-foreground">{sourceName}</span>
             <span className="font-bold uppercase tracking-widest text-primary">
               {article.category}
@@ -121,9 +121,9 @@ export function ArticleCard({ article, variant = 'default' }: ArticleCardProps) 
   // Default variant - clean tile with image and headline only
   return (
     <Link href={`/articles/${article.id}`} className="block group">
-      <article className="bg-white border-b border-border pb-6 mb-6 card-hover">
+      <article className="bg-card border-b border-border pb-6 mb-6 card-hover">
         {/* Top metadata bar - source left, category center, score right */}
-        <div className="flex items-center justify-between py-2 mb-2 text-xs">
+        <div className="flex items-center justify-between py-2 mb-2 px-3 text-xs">
           <span className="text-muted-foreground">{sourceName}</span>
           <span className="font-bold uppercase tracking-widest text-primary">
             {article.category}
@@ -135,7 +135,7 @@ export function ArticleCard({ article, variant = 'default' }: ArticleCardProps) 
 
         <div className="flex flex-col md:flex-row gap-6">
           {article.imageUrl && (
-            <div className="relative w-full md:w-64 h-48 flex-shrink-0 overflow-hidden bg-gray-100">
+            <div className="relative w-full md:w-64 h-48 flex-shrink-0 overflow-hidden bg-muted">
               <Image
                 src={article.imageUrl}
                 alt={article.title}
