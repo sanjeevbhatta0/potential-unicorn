@@ -241,13 +241,13 @@ export default function CrawlersPage() {
                 enabled: source.crawlConfig?.enabled ?? true,
                 interval: source.crawlConfig?.interval ?? 30,
                 maxArticles: source.crawlConfig?.maxArticles ?? 50,
-                selectors: source.crawlConfig?.selectors || {
-                    article: '',
-                    title: '',
-                    content: '',
-                    image: '',
-                    author: '',
-                    date: '',
+                selectors: {
+                    article: source.crawlConfig?.selectors?.article ?? '',
+                    title: source.crawlConfig?.selectors?.title ?? '',
+                    content: source.crawlConfig?.selectors?.content ?? '',
+                    image: source.crawlConfig?.selectors?.image ?? '',
+                    author: source.crawlConfig?.selectors?.author ?? '',
+                    date: source.crawlConfig?.selectors?.date ?? '',
                 },
             },
         });

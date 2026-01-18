@@ -1,22 +1,25 @@
 import { google, youtube_v3 } from 'googleapis';
 import axios from 'axios';
-import { BaseCrawler, CrawlResult } from './base.crawler';
 import { YouTubeChannelConfig, getActiveChannels } from '../config/youtube-channels.config';
-import { logger } from '../utils/logger';
+import logger from '../utils/logger';
 
-// YouTube Transcript API (unofficial but works)
-interface TranscriptLine {
-  text: string;
-  start: number;
-  duration: number;
+// YouTube-specific crawl result interface
+export interface CrawlResult {
+  title: string;
+  content: string;
+  url: string;
+  imageUrl?: string;
+  author?: string;
+  publishedAt: Date;
+  category: string;
+  metadata?: Record<string, any>;
 }
 
-export class YouTubeCrawler extends BaseCrawler {
+export class YouTubeCrawler {
   private youtube: youtube_v3.Youtube;
   private apiKey: string;
 
   constructor() {
-    super('youtube', 'YouTube News');
     this.apiKey = process.env.YOUTUBE_API_KEY || '';
 
     if (!this.apiKey) {
@@ -306,12 +309,12 @@ export class YouTubeCrawler extends BaseCrawler {
     if (!thumbnails) return undefined;
 
     // Get highest quality thumbnail
-    return (
-      thumbnails.maxres?.url ||
+    const url = thumbnails.maxres?.url ||
       thumbnails.high?.url ||
       thumbnails.medium?.url ||
-      thumbnails.default?.url
-    );
+      thumbnails.default?.url;
+
+    return url ?? undefined;
   }
 
   private parseDuration(duration: string): number {
@@ -335,5 +338,15 @@ export class YouTubeCrawler extends BaseCrawler {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Clean text by removing extra whitespace and special characters
+   */
+  private cleanText(text: string): string {
+    return text
+      .replace(/\s+/g, ' ')
+      .replace(/[\r\n]+/g, ' ')
+      .trim();
   }
 }

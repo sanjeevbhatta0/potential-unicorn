@@ -35,6 +35,18 @@ export class UserEntity {
   @Column({ name: 'avatar_url', nullable: true })
   avatarUrl: string;
 
+  @Column({ name: 'country_of_residence', nullable: true })
+  countryOfResidence: string;
+
+  @Column({ name: 'age_group', nullable: true })
+  ageGroup: string;
+
+  @Column({ name: 'phone_number', nullable: true })
+  phoneNumber: string;
+
+  @Column({ name: 'account_type', default: 'general' })
+  accountType: 'general' | 'business';
+
   @Column('jsonb', { default: {} })
   preferences: {
     language?: 'ne' | 'en';

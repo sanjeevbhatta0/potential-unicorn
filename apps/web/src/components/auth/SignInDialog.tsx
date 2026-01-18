@@ -21,18 +21,23 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
+import { COUNTRIES, AGE_GROUPS } from '@/lib/constants/countries';
 
 // Validation Schemas
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 const registerSchema = z.object({
     email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
     fullName: z.string().min(2, 'Name must be at least 2 characters'),
+    countryOfResidence: z.string().optional(),
+    ageGroup: z.enum(['18-24', '25-34', '35-44', '45-54', '55-64', '65+']).optional(),
+    phoneNumber: z.string().optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -98,7 +103,7 @@ export function SignInDialog({ children, defaultTab = 'login' }: SignInDialogPro
             <DialogTrigger asChild>
                 {children || <Button variant="outline">Sign In</Button>}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Account Access</DialogTitle>
                     <DialogDescription>
@@ -154,7 +159,7 @@ export function SignInDialog({ children, defaultTab = 'login' }: SignInDialogPro
                     <TabsContent value="register">
                         <form onSubmit={handleRegisterSubmit(onRegister)} className="space-y-4 py-4">
                             <div className="space-y-2">
-                                <Label htmlFor="register-name">Full Name</Label>
+                                <Label htmlFor="register-name">Full Name *</Label>
                                 <Input
                                     id="register-name"
                                     placeholder="John Doe"
@@ -165,7 +170,7 @@ export function SignInDialog({ children, defaultTab = 'login' }: SignInDialogPro
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="register-email">Email</Label>
+                                <Label htmlFor="register-email">Email *</Label>
                                 <Input
                                     id="register-email"
                                     type="email"
@@ -177,15 +182,53 @@ export function SignInDialog({ children, defaultTab = 'login' }: SignInDialogPro
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="register-password">Password</Label>
+                                <Label htmlFor="register-password">Password *</Label>
                                 <Input
                                     id="register-password"
                                     type="password"
+                                    placeholder="Minimum 8 characters"
                                     {...registerSignUp('password')}
                                 />
                                 {registerErrors.password && (
                                     <span className="text-xs text-red-500">{registerErrors.password.message}</span>
                                 )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="register-phone">Phone Number</Label>
+                                <Input
+                                    id="register-phone"
+                                    type="tel"
+                                    placeholder="+977-9841234567"
+                                    {...registerSignUp('phoneNumber')}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="register-country">Country of Residence</Label>
+                                <Select
+                                    id="register-country"
+                                    {...registerSignUp('countryOfResidence')}
+                                >
+                                    <option value="">Select a country</option>
+                                    {COUNTRIES.map((country) => (
+                                        <option key={country.value} value={country.label}>
+                                            {country.label}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="register-age">Age Group</Label>
+                                <Select
+                                    id="register-age"
+                                    {...registerSignUp('ageGroup')}
+                                >
+                                    <option value="">Select age group</option>
+                                    {AGE_GROUPS.map((group) => (
+                                        <option key={group.value} value={group.value}>
+                                            {group.label}
+                                        </option>
+                                    ))}
+                                </Select>
                             </div>
                             <Button type="submit" className="w-full" disabled={isRegisterSubmitting}>
                                 {isRegisterSubmitting ? 'Creating Account...' : 'Create Account'}

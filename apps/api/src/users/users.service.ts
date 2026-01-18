@@ -40,6 +40,10 @@ export class UsersService {
       passwordHash,
       fullName: createUserDto.fullName,
       role: createUserDto.role || 'user',
+      countryOfResidence: createUserDto.countryOfResidence,
+      ageGroup: createUserDto.ageGroup,
+      phoneNumber: createUserDto.phoneNumber,
+      accountType: 'general',
       preferences: {},
     });
 

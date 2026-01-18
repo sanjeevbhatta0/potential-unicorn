@@ -207,7 +207,10 @@ export default function AIModelsPage() {
             modelId: model.modelId,
             apiKey: '',
             isActive: model.isActive,
-            config: model.config || { temperature: 0.7, maxTokens: 4096 },
+            config: {
+                temperature: model.config?.temperature ?? 0.7,
+                maxTokens: model.config?.maxTokens ?? 4096,
+            },
         });
         setShowModal(true);
     }

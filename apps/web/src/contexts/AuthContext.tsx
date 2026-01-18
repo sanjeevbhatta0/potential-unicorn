@@ -47,8 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await authService.login(data);
             const userData = await authService.getMe();
             setUser(userData);
-            // Optional: Refresh or redirect
-            router.refresh();
+            // Redirect to dashboard after login
+            router.push('/dashboard');
         } catch (error) {
             throw error;
         } finally {
@@ -63,7 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Assuming register returns token and logs in automatically
             const userData = await authService.getMe();
             setUser(userData);
-            router.refresh();
+            // Redirect to dashboard after registration
+            router.push('/dashboard');
         } catch (error) {
             throw error;
         } finally {

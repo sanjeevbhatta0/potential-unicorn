@@ -1,4 +1,4 @@
-import { User } from '@potential-unicorn/types';
+import { User, AgeGroup } from '@potential-unicorn/types';
 import { api } from '../lib/api/client';
 
 // Types
@@ -11,6 +11,9 @@ export interface RegisterDto {
     email: string;
     password: string;
     fullName?: string;
+    countryOfResidence?: string;
+    ageGroup?: AgeGroup;
+    phoneNumber?: string;
 }
 
 export interface AuthResponse {

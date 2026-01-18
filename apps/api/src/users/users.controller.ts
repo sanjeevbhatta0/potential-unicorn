@@ -17,6 +17,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserEntity } from '../database/entities/user.entity';
@@ -75,6 +76,22 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.update(user.id, updateUserDto);
+  }
+
+  @Post('me/password')
+  @ApiOperation({ summary: 'Change current user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 400, description: 'Current password incorrect' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  changePassword(
+    @CurrentUser() user: UserEntity,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.usersService.updatePassword(
+      user.id,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword,
+    );
   }
 
   @Patch(':id')
