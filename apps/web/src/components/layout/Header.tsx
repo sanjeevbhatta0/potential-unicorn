@@ -87,9 +87,12 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3">
-          <div className="h-8 w-8 bg-primary" />
-          <span className="text-xl font-serif font-bold tracking-tight">Nepali News</span>
+        <Link href="/" className="flex items-center space-x-2">
+          <img src="/logo.png" alt="NewsChautari" className="h-8 w-8" />
+          <div className="flex flex-col">
+            <span className="text-lg font-serif font-bold tracking-tight leading-tight">NewsChautari</span>
+            <span className="text-[10px] text-muted-foreground leading-none hidden sm:block">Smart. Short. Simple.</span>
+          </div>
         </Link>
 
         {/* Search and Actions */}

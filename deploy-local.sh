@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Local Deployment Script for Nepali News Hub
+# Local Deployment Script for NewsChautari
 # This script automates the entire local deployment process
 
 set -e  # Exit on any error
 
-echo "🚀 Starting Nepali News Hub Local Deployment..."
+echo "🚀 Starting NewsChautari Local Deployment..."
 echo ""
 
 # Colors for output

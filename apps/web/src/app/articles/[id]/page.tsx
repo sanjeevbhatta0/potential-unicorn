@@ -12,8 +12,8 @@ export async function generateMetadata({
 }: ArticlePageProps): Promise<Metadata> {
   // In a real app, you would fetch the article here for metadata
   return {
-    title: 'Article Detail - Nepali News Hub',
-    description: 'Read the full article on Nepali News Hub',
+    title: 'Article Detail - NewsChautari',
+    description: 'Read the full article on NewsChautari',
   };
 }
 

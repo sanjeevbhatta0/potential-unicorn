@@ -1,4 +1,4 @@
-# Nepali News Hub (potential-unicorn)
+# NewsChautari (potential-unicorn)
 
 > A modern AI-powered news aggregator for Nepali news with intelligent summarization and a self-service advertisement platform.
 

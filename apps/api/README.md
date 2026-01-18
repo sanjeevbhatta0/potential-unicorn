@@ -1,6 +1,6 @@
-# Nepali News Hub API
+# NewsChautari API
 
-Production-ready NestJS API backend for the Nepali News Hub application.
+Production-ready NestJS API backend for the NewsChautari application.
 
 ## Features
 

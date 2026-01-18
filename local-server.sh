@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Local Server Management Script for Nepali News Hub
+# Local Server Management Script for NewsChautari
 # This script kills all running services and restarts them
 
 # Colors for output
@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}🚀 Nepali News Hub - Local Server Manager${NC}"
+echo -e "${BLUE}🚀 NewsChautari - Local Server Manager${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 

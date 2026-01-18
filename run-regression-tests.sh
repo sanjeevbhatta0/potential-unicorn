@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Regression Test Runner for Nepali News Hub
+# Regression Test Runner for NewsChautari
 # This script runs all regression tests across the project
 #
 # Usage:
@@ -30,7 +30,7 @@ FAILED_SUITES=()
 
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}🧪 Nepali News Hub - Regression Test Runner${NC}"
+echo -e "${BLUE}🧪 NewsChautari - Regression Test Runner${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 

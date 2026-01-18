@@ -16,9 +16,13 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Nepali News Hub - Latest News from Nepal',
-  description: 'Stay updated with the latest news from Nepal and around the world. Get breaking news, trending stories, and in-depth analysis.',
-  keywords: 'Nepal news, breaking news, latest news, Nepali news hub',
+  title: 'NewsChautari - Smart. Short. Simple.',
+  description: 'NewsChautari delivers the latest news from Nepal and around the world. Smart summaries, short updates, simple navigation.',
+  keywords: 'NewsChautari, Nepal news, breaking news, latest news, Nepali news, smart news',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({

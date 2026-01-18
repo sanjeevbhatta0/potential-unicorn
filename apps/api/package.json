@@ -1,7 +1,7 @@
 {
   "name": "@potential-unicorn/api",
   "version": "0.1.0",
-  "description": "NestJS API for Nepali News Hub",
+  "description": "NestJS API for NewsChautari",
   "private": true,
   "scripts": {
     "build": "nest build",

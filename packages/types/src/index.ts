@@ -1,4 +1,4 @@
-// Core domain types for Nepali News Hub
+// Core domain types for NewsChautari
 
 export * from './article';
 export * from './user';

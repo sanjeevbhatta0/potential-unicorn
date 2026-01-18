@@ -2,7 +2,7 @@
   "name": "potential-unicorn",
   "version": "0.1.0",
   "private": true,
-  "description": "Nepali News Hub - AI-powered news aggregator",
+  "description": "NewsChautari - AI-powered news aggregator",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",

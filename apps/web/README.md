@@ -1,6 +1,6 @@
-# Nepali News Hub - Web Application
+# NewsChautari - Web Application
 
-This is the web frontend for the Nepali News Hub, built with Next.js 14 using the App Router.
+This is the web frontend for the NewsChautari, built with Next.js 14 using the App Router.
 
 ## Tech Stack
 
@@ -88,7 +88,7 @@ Create a `.env.local` file in the root directory:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_API_TIMEOUT=30000
-NEXT_PUBLIC_APP_NAME="Nepali News Hub"
+NEXT_PUBLIC_APP_NAME="NewsChautari"
 NEXT_PUBLIC_ITEMS_PER_PAGE=20
 ```
 

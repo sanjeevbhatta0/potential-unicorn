@@ -7,7 +7,7 @@ export class AppService {
 
   getRoot(): { message: string; version: string } {
     return {
-      message: 'Welcome to Nepali News Hub API',
+      message: 'Welcome to NewsChautari API',
       version: '1.0.0',
     };
   }

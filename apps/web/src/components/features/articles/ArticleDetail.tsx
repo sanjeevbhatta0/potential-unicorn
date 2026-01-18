@@ -329,7 +329,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
               <ul className="space-y-3">
                 {summaryData.key_points.map((point: string, index: number) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-primary text-white flex items-center justify-center text-sm font-bold">
+                    <span className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold rounded-full">
                       {index + 1}
                     </span>
                     <span className="flex-1 leading-relaxed text-foreground">

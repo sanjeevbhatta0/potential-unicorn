@@ -9,9 +9,9 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* About */}
           <div>
-            <h3 className="font-serif text-xl font-bold mb-4">Nepali News Hub</h3>
+            <h3 className="font-serif text-xl font-bold mb-4">NewsChautari</h3>
             <p className="text-sm text-zinc-400">
-              Your trusted source for the latest news from Nepal and around the world.
+              Smart. Short. Simple. Your trusted source for concise and intelligent news updates from Nepal and beyond.
             </p>
           </div>
 
@@ -98,7 +98,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-zinc-700 text-center text-sm text-zinc-400">
-          <p>&copy; {currentYear} Nepali News Hub. All rights reserved.</p>
+          <p>&copy; {currentYear} NewsChautari. All rights reserved.</p>
         </div>
       </div>
     </footer>
