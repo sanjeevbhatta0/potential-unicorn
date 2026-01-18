@@ -21,23 +21,33 @@ export function ArticleList({
     return (
       <div
         className={cn(
-          {
-            'grid gap-6 md:grid-cols-2 lg:grid-cols-3': variant === 'grid',
-            'space-y-4': variant === 'compact',
-            'grid gap-6 md:grid-cols-2': variant === 'default',
-          },
+          "grid grid-cols-1 md:grid-cols-12 gap-6",
           className
         )}
       >
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="bg-muted rounded-lg h-48 mb-4" />
-            <div className="space-y-2">
-              <div className="h-4 bg-muted rounded w-3/4" />
-              <div className="h-3 bg-muted rounded w-1/2" />
+        {[...Array(14)].map((_, index) => {
+          let spanClass = "md:col-span-4";
+
+          if (index === 0 || index === 1) {
+            spanClass = "md:col-span-6";
+          } else {
+            const i = (index - 2) % 12;
+            if (i <= 3) spanClass = "md:col-span-3";
+            else if (i <= 6) spanClass = "md:col-span-4";
+            else if (i <= 8) spanClass = "md:col-span-6";
+            else if (i >= 9) spanClass = "md:col-span-4";
+          }
+
+          return (
+            <div key={index} className={cn("animate-pulse col-span-1", spanClass)}>
+              <div className="bg-muted rounded-lg h-56 mb-4" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-3 bg-muted rounded w-1/2" />
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     );
   }
@@ -68,13 +78,50 @@ export function ArticleList({
     );
   }
 
+  if (variant === 'default' || variant === 'grid') { // Treat default as grid (or check if user passed bento)
+    // Actually, user wants to REPLACE "2 tiles in a row" (default) with Bento.
+    // So 'default' variant should now behave like 'dynamic'.
+
+    return (
+      <div className={cn("grid grid-cols-1 md:grid-cols-12 gap-6", className)}>
+        {articles.map((article, index) => {
+          let spanClass = "md:col-span-4"; // Default
+
+          if (index === 0 || index === 1) {
+            // First Row: Always 2 tiles
+            spanClass = "md:col-span-6";
+          } else {
+            // Subsequent Rows: Dense Pattern (shifted by 2)
+            const i = (index - 2) % 12;
+
+            // Row 1: 4 items (Span 3)
+            if (i <= 3) spanClass = "md:col-span-3";
+            // Row 2: 3 items (Span 4)
+            else if (i <= 6) spanClass = "md:col-span-4";
+            // Row 3: 2 items (Span 6)
+            else if (i <= 8) spanClass = "md:col-span-6";
+            // Row 4: 3 items (Span 4)
+            else if (i >= 9) spanClass = "md:col-span-4";
+          }
+
+          return (
+            <ArticleCard
+              key={article.id}
+              article={article}
+              variant="grid"
+              className={spanClass}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
         {
-          'grid gap-6 md:grid-cols-2 lg:grid-cols-3': variant === 'grid',
           'space-y-4': variant === 'compact',
-          'grid gap-6 md:grid-cols-2': variant === 'default',
         },
         className
       )}
