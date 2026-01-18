@@ -20,7 +20,8 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "typeorm-ts-node-commonjs migration:generate",
     "migration:run": "typeorm-ts-node-commonjs migration:run",
-    "migration:revert": "typeorm-ts-node-commonjs migration:revert"
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert",
+    "seed:sources": "ts-node src/database/seed-sources.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",

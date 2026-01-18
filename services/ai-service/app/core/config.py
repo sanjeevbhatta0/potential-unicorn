@@ -28,10 +28,12 @@ class Settings(BaseSettings):
     # AI API Keys
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+    gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
 
     # Model Configuration
     claude_model: str = Field(default="claude-3-5-sonnet-20241022", alias="CLAUDE_MODEL")
     openai_model: str = Field(default="gpt-4-turbo-preview", alias="OPENAI_MODEL")
+    gemini_model: str = Field(default="gemini-2.0-flash", alias="GEMINI_MODEL")
     max_tokens: int = Field(default=4096, alias="MAX_TOKENS")
     temperature: float = Field(default=0.7, alias="TEMPERATURE")
 

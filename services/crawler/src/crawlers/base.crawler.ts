@@ -14,6 +14,7 @@ export interface Article {
   image?: string;
   tags?: string[];
   source: string;
+  sourceId?: string;
   crawledAt: Date;
 }
 

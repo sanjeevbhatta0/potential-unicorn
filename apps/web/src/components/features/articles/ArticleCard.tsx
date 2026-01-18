@@ -9,17 +9,21 @@ interface ArticleCardProps {
   variant?: 'default' | 'compact' | 'featured';
 }
 
-// Helper to get credibility score styling
+// Helper to get credibility score styling (5-point scale)
 const getCredibilityStyle = (score: number) => {
-  if (score >= 7) return { class: 'bg-emerald-600 text-white', label: 'High' };
-  if (score >= 4) return { class: 'bg-amber-500 text-white', label: 'Medium' };
+  if (score >= 3.5) return { class: 'bg-emerald-600 text-white', label: 'High' };
+  if (score >= 2) return { class: 'bg-amber-500 text-white', label: 'Medium' };
   return { class: 'bg-red-600 text-white', label: 'Low' };
 };
 
-// Mock credibility score (will be replaced with actual AI score)
-const getCredibilityScore = (article: Article) => {
-  const hash = article.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-  return Math.min(10, Math.max(1, (hash % 10) + 1));
+// Get actual credibility score from article data (converted to 5-point scale)
+const getCredibilityScore = (article: Article): number | null => {
+  const articleData = article as any;
+  if (articleData.credibilityScore && typeof articleData.credibilityScore === 'number') {
+    // Convert from 10-point to 5-point scale
+    return Math.round((articleData.credibilityScore / 2) * 10) / 10;
+  }
+  return null;
 };
 
 // Get source name from sourceId
@@ -35,7 +39,7 @@ const getSourceName = (sourceId: string) => {
 export function ArticleCard({ article, variant = 'default' }: ArticleCardProps) {
   const formattedDate = format(new Date(article.publishedAt), 'MMM dd, yyyy');
   const credibilityScore = getCredibilityScore(article);
-  const credibilityStyle = getCredibilityStyle(credibilityScore);
+  const credibilityStyle = credibilityScore ? getCredibilityStyle(credibilityScore) : null;
   const sourceName = getSourceName(article.sourceId);
 
   if (variant === 'compact') {
@@ -56,9 +60,11 @@ export function ArticleCard({ article, variant = 'default' }: ArticleCardProps) 
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">{sourceName}</span>
               <span className="uppercase tracking-wide font-bold text-primary">{article.category}</span>
-              <span className={cn('px-2 py-0.5 text-xs font-bold', credibilityStyle.class)}>
-                {credibilityScore}/10
-              </span>
+              {credibilityScore && credibilityStyle && (
+                <span className={cn('px-2 py-0.5 text-xs font-bold', credibilityStyle.class)}>
+                  AI Rating: {credibilityScore} ★
+                </span>
+              )}
             </div>
             <h3 className="font-serif font-bold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
               {article.title}
@@ -82,9 +88,11 @@ export function ArticleCard({ article, variant = 'default' }: ArticleCardProps) 
             <span className="font-bold uppercase tracking-widest text-primary">
               {article.category}
             </span>
-            <span className={cn('px-2 py-0.5 text-xs font-bold', credibilityStyle.class)}>
-              {credibilityScore}/10
-            </span>
+            {credibilityScore && credibilityStyle && (
+              <span className={cn('px-2 py-0.5 text-xs font-bold', credibilityStyle.class)}>
+                AI Rating: {credibilityScore} ★
+              </span>
+            )}
           </div>
 
           {article.imageUrl && (
@@ -128,9 +136,11 @@ export function ArticleCard({ article, variant = 'default' }: ArticleCardProps) 
           <span className="font-bold uppercase tracking-widest text-primary">
             {article.category}
           </span>
-          <span className={cn('px-2 py-0.5 font-bold', credibilityStyle.class)}>
-            {credibilityScore}/10
-          </span>
+          {credibilityScore && credibilityStyle && (
+            <span className={cn('px-2 py-0.5 font-bold', credibilityStyle.class)}>
+              AI Rating: {credibilityScore} ★
+            </span>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-6">

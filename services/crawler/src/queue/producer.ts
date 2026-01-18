@@ -116,11 +116,11 @@ export class QueueProducer {
       };
 
       if (apiKey) {
-        headers['Authorization'] = `Bearer ${apiKey}`;
+        headers['x-api-key'] = apiKey;
       }
 
-      // Map source name to sourceId
-      const sourceIds: Record<string, string> = {
+      // Fallback source IDs (for legacy crawlers without sourceId)
+      const fallbackSourceIds: Record<string, string> = {
         'Online Khabar': '550e8400-e29b-41d4-a716-446655440001',
         'eKantipur': '550e8400-e29b-41d4-a716-446655440002',
         'Setopati': '550e8400-e29b-41d4-a716-446655440003',
@@ -167,14 +167,31 @@ export class QueueProducer {
       }
 
       // Transform to API format
+      // Use article.sourceId from the crawler, or fall back to name-based lookup
+      const resolvedSourceId = article.sourceId || fallbackSourceIds[article.source] || fallbackSourceIds['Online Khabar'];
+
+      // Safely parse publishDate - handle invalid date strings gracefully
+      let publishedAt: string;
+      try {
+        if (article.publishDate) {
+          const date = new Date(article.publishDate);
+          // Check if date is valid
+          publishedAt = isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+        } else {
+          publishedAt = new Date().toISOString();
+        }
+      } catch {
+        publishedAt = new Date().toISOString();
+      }
+
       const apiPayload: any = {
-        sourceId: sourceIds[article.source] || sourceIds['Online Khabar'],
+        sourceId: resolvedSourceId,
         title: article.title,
         content: article.content,
         url: article.url,
         imageUrl: article.image,
         author: article.author,
-        publishedAt: article.publishDate ? new Date(article.publishDate).toISOString() : new Date().toISOString(),
+        publishedAt,
         category: finalCategory,
         tags: article.tags,
         language: mappedLanguage,

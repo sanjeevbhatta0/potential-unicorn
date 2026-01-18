@@ -8,6 +8,8 @@ import {
   Delete,
   Query,
   UseGuards,
+  Headers,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -130,5 +132,22 @@ export class ArticlesController {
   @ApiResponse({ status: 404, description: 'Article not found' })
   recategorizeArticle(@Param('id') id: string) {
     return this.articlesService.recategorizeArticle(id);
+  }
+
+  @Post('crawler/ingest')
+  @Public()
+  @ApiOperation({ summary: 'Internal endpoint for crawler to submit articles' })
+  @ApiResponse({ status: 201, description: 'Article created successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid API key' })
+  async ingestFromCrawler(
+    @Headers('x-api-key') apiKey: string,
+    @Body() createArticleDto: CreateArticleDto,
+  ) {
+    // Validate internal API key
+    const validApiKey = process.env.CRAWLER_API_KEY || 'crawler-secret-key-2026';
+    if (apiKey !== validApiKey) {
+      throw new UnauthorizedException('Invalid API key');
+    }
+    return this.articlesService.create(createArticleDto);
   }
 }

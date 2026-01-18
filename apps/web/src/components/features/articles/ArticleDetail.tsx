@@ -18,20 +18,25 @@ interface AISummaryData {
   key_points: string[];
 }
 
-// Helper to get credibility score styling
+// Helper to get credibility score styling (5-point scale)
 const getCredibilityStyle = (score: number) => {
-  if (score >= 7) return { class: 'credibility-high', label: 'High Credibility', color: 'text-emerald-600' };
-  if (score >= 4) return { class: 'credibility-medium', label: 'Medium Credibility', color: 'text-amber-600' };
+  if (score >= 3.5) return { class: 'credibility-high', label: 'High Credibility', color: 'text-emerald-600' };
+  if (score >= 2) return { class: 'credibility-medium', label: 'Medium Credibility', color: 'text-amber-600' };
   return { class: 'credibility-low', label: 'Low Credibility', color: 'text-red-600' };
 };
 
-// Get initial credibility score from article
-const getInitialCredibilityScore = (article: Article) => {
+// Convert 10-point score to 5-point scale
+const convertTo5PointScale = (score: number): number => {
+  return Math.round((score / 2) * 10) / 10;
+};
+
+// Get initial credibility score from article (converted to 5-point scale)
+const getInitialCredibilityScore = (article: Article): number | null => {
   const articleData = article as any;
   if (articleData.credibilityScore && typeof articleData.credibilityScore === 'number') {
-    return articleData.credibilityScore;
+    return convertTo5PointScale(articleData.credibilityScore);
   }
-  return null; // Return null if no score yet
+  return null;
 };
 
 // Get source name from sourceId
@@ -139,7 +144,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
             summary: articleData.aiSummary,
             key_points: articleData.aiKeyPoints || [],
           });
-          setCredibilityScore(articleData.credibilityScore || null);
+          setCredibilityScore(articleData.credibilityScore ? convertTo5PointScale(articleData.credibilityScore) : null);
           setCurrentCategory(articleData.category || article.category);
           setHasAIData(true);
           setIsLoadingSummary(false);
@@ -181,7 +186,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
           });
 
           if (data.credibilityScore) {
-            setCredibilityScore(data.credibilityScore);
+            setCredibilityScore(convertTo5PointScale(data.credibilityScore));
           }
 
           if (data.category) {
@@ -236,7 +241,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
             <>
               <span className="text-muted-foreground">|</span>
               <span className={cn('ai-score-badge', credibilityStyle.class)}>
-                AI Score: {credibilityScore}/10
+                AI Rating: {credibilityScore} ★
               </span>
             </>
           )}

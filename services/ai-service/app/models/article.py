@@ -33,6 +33,7 @@ class AIProvider(str, Enum):
     """AI provider options."""
     CLAUDE = "claude"
     OPENAI = "openai"
+    GEMINI = "gemini"
 
 
 class ArticleInput(BaseModel):

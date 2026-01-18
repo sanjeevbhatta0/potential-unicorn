@@ -1,10 +1,16 @@
-"""Summarization service with Claude and OpenAI integration."""
+"""Summarization service with Claude, OpenAI, and Gemini integration."""
 
 import re
 import time
 from typing import List, Optional, Tuple
 from anthropic import Anthropic, APIError, APITimeoutError, RateLimitError
 from openai import OpenAI, APIError as OpenAIAPIError
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    genai = None
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -79,6 +85,10 @@ class SummarizerService:
         """Initialize the summarizer service with API clients."""
         self.anthropic_client = Anthropic(api_key=settings.anthropic_api_key) if settings.anthropic_api_key else None
         self.openai_client = OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
+        self.gemini_client = None
+        if GEMINI_AVAILABLE and settings.gemini_api_key:
+            genai.configure(api_key=settings.gemini_api_key)
+            self.gemini_client = genai.GenerativeModel(settings.gemini_model)
 
     def _get_word_target(self, length: SummaryLength) -> int:
         """Get target word count based on summary length."""
@@ -258,6 +268,39 @@ OUTPUT FORMAT (you MUST follow this exactly):
             logger.error(f"Unexpected error in OpenAI summarization: {e}")
             raise
 
+    async def _summarize_with_gemini(self, request: SummarizeRequest) -> Tuple[str, Optional[List[str]], Optional[str]]:
+        """Summarize using Gemini API."""
+        if not self.gemini_client:
+            raise ValueError("Gemini API key not configured or google-generativeai not installed")
+
+        system_prompt = self._build_system_prompt(request)
+        user_prompt = self._build_user_prompt(request)
+
+        try:
+            logger.info(f"Calling Gemini API with model: {settings.gemini_model}")
+
+            # Combine prompts for Gemini (it handles system instruction differently)
+            full_prompt = f"{system_prompt}\n\n{user_prompt}"
+
+            response = self.gemini_client.generate_content(full_prompt)
+
+            content = response.text
+            logger.info(f"Gemini API response received. Content length: {len(content)}")
+
+            # Parse summary, key points, and category
+            summary, key_points, category = self._parse_response(
+                content,
+                request.key_points,
+                request.article.title or "",
+                request.article.content
+            )
+
+            return summary, key_points, category
+
+        except Exception as e:
+            logger.error(f"Gemini API error: {e}")
+            raise
+
     def _parse_response(
         self,
         content: str,
@@ -360,6 +403,9 @@ OUTPUT FORMAT (you MUST follow this exactly):
             elif request.provider == AIProvider.OPENAI:
                 summary, key_points, category = await self._summarize_with_openai(request)
                 model_used = settings.openai_model
+            elif request.provider == AIProvider.GEMINI:
+                summary, key_points, category = await self._summarize_with_gemini(request)
+                model_used = settings.gemini_model
             else:
                 raise ValueError(f"Unsupported provider: {request.provider}")
 

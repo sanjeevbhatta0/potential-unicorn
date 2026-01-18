@@ -1,7 +1,9 @@
 import axios from 'axios';
 import logger from '../utils/logger';
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+// Use the NestJS API for AI processing (it fetches API keys from database)
+const API_URL = process.env.API_URL || 'http://localhost:3333';
+const API_KEY = process.env.API_KEY || 'crawler-secret-key-2026';
 
 export interface AIProcessingResult {
     aiSummary: string;
@@ -11,8 +13,9 @@ export interface AIProcessingResult {
 }
 
 /**
- * Process an article with AI to get Nepali summary, key points, and credibility score
- * This is called at crawl-time for new articles
+ * Process an article with AI to get summary, key points, and credibility score.
+ * This calls the NestJS API's internal AI endpoint which fetches the API key
+ * from the database and calls the configured AI provider (Gemini, Claude, etc.)
  */
 export async function processArticleWithAI(
     title: string,
@@ -22,50 +25,42 @@ export async function processArticleWithAI(
     try {
         logger.info(`Processing article with AI: ${title.substring(0, 50)}...`);
 
-        // Call summarize endpoint
-        const summaryResponse = await axios.post(
-            `${AI_SERVICE_URL}/api/v1/summarize`,
+        // Call the NestJS API's internal AI summarize endpoint
+        const response = await axios.post(
+            `${API_URL}/api/v1/ai/summarize`,
             {
-                article: {
-                    content: content.substring(0, 4000),
-                    title: title,
-                },
-                provider: 'claude',
-                length: 'medium',
+                title: title,
+                content: content.substring(0, 4000),
                 language: 'ne', // Nepali
             },
-            { timeout: 60000 } // 60 second timeout
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': API_KEY,
+                },
+                timeout: 90000, // 90 second timeout for AI processing
+            }
         );
 
-        const summaryData = summaryResponse.data;
+        const responseData = response.data;
 
-        // Call credibility endpoint
-        let credibilityScore = 7; // Default score
-        try {
-            const credibilityResponse = await axios.post(
-                `${AI_SERVICE_URL}/api/v1/credibility`,
-                {
-                    article: {
-                        content: content.substring(0, 4000),
-                        title: title,
-                        url: url,
-                    },
-                },
-                { timeout: 30000 }
-            );
-            credibilityScore = credibilityResponse.data.overall_score || 7;
-        } catch (credError: any) {
-            logger.warn(`Credibility check failed, using default score: ${credError.message}`);
+        // NestJS wraps the response: { success: true, data: { success: true, summary: ... } }
+        // Extract the actual AI response from the nested structure
+        const aiData = responseData.data || responseData;
+
+        if (!aiData.success && !aiData.summary) {
+            logger.warn(`AI processing returned unsuccessful: ${aiData.message || 'Unknown error'}`);
+            return null;
         }
 
         const result: AIProcessingResult = {
-            aiSummary: summaryData.summary,
-            aiKeyPoints: summaryData.key_points || [],
-            credibilityScore: credibilityScore,
-            category: summaryData.category,
+            aiSummary: aiData.summary || '',
+            aiKeyPoints: aiData.key_points || [],
+            credibilityScore: aiData.credibility_score || 7,
+            category: aiData.category,
         };
 
-        logger.info(`AI processing complete: ${result.aiKeyPoints.length} key points, score: ${credibilityScore}`);
+        logger.info(`AI processing complete: ${result.aiKeyPoints.length} key points, category: ${result.category}, score: ${result.credibilityScore}`);
         return result;
 
     } catch (error: any) {
@@ -74,3 +69,4 @@ export async function processArticleWithAI(
         return null;
     }
 }
+

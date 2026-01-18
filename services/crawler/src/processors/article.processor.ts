@@ -6,6 +6,7 @@ export interface ProcessedArticle extends Article {
   readingTime: number; // in minutes
   language: 'ne' | 'en' | 'mixed';
   summary?: string;
+  sourceId?: string; // Optional: provided by GenericCrawler for dynamic sources
 }
 
 export class ArticleProcessor {
