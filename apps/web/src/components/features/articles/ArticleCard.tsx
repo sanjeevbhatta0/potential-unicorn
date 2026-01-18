@@ -1,8 +1,11 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Article } from '@potential-unicorn/types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils/cn';
+import { motion } from 'framer-motion';
 
 interface ArticleCardProps {
   article: Article;
@@ -91,21 +94,31 @@ export function ArticleCard({ article, variant = 'default', className }: Article
     if (isVertical) {
       return (
         <Link href={`/articles/${article.id}`} className={cn("block group h-full", className)}>
-          <article className="bg-card border border-border/50 rounded-lg overflow-hidden h-full flex flex-col transition-all hover:shadow-md">
+          <motion.article
+            layoutId={`article-container-${article.id}`}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
+            whileTap={{ scale: 0.98 }}
+            className="bg-card border border-border/50 rounded-lg overflow-hidden h-full flex flex-col transition-shadow hover:shadow-xl hover:shadow-primary/10 origin-center"
+          >
             {article.imageUrl && (
-              <div className="relative w-full aspect-video overflow-hidden bg-muted">
+              <motion.div
+                layoutId={`article-image-${article.id}`}
+                className="relative w-full aspect-video overflow-hidden bg-muted"
+              >
                 <Image
                   src={article.imageUrl}
                   alt={article.title}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute top-2 right-2 flex gap-1">
+                <motion.div layoutId={`article-badge-${article.id}`} className="absolute top-2 right-2 flex gap-1">
                   <div className="bg-background/90 backdrop-blur px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded">
                     {article.category}
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             )}
 
             <div className="flex flex-col flex-1 p-4">
@@ -119,16 +132,19 @@ export function ArticleCard({ article, variant = 'default', className }: Article
                 )}
               </div>
 
-              <h3 className="font-serif text-lg font-bold leading-tight mb-2 flex-grow group-hover:text-primary transition-colors line-clamp-3">
+              <motion.h3
+                layoutId={`article-title-${article.id}`}
+                className="font-serif text-lg font-bold leading-tight mb-2 flex-grow group-hover:text-primary transition-colors line-clamp-3"
+              >
                 {article.title}
-              </h3>
+              </motion.h3>
 
               <div className="mt-auto pt-3 flex items-center justify-between text-xs text-muted-foreground border-t border-border/50">
                 <span>{formattedDate}</span>
                 {article.author && <span className="truncate max-w-[50%]">{article.author}</span>}
               </div>
             </div>
-          </article>
+          </motion.article>
         </Link>
       );
     }

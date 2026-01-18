@@ -8,6 +8,7 @@ import { useArticleStore } from '@/lib/store/articleStore';
 import { useEffect, useState, useCallback } from 'react';
 import { useIncrementViewCount } from '@/lib/hooks/useArticles';
 import { cn } from '@/lib/utils/cn';
+import { motion } from 'framer-motion';
 
 interface ArticleDetailProps {
   article: Article;
@@ -279,7 +280,10 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
 
       {/* Featured Image */}
       {article.imageUrl && (
-        <div className="relative w-full h-96 my-8 bg-muted">
+        <motion.div
+          layoutId={`article-image-${article.id}`}
+          className="relative w-full h-96 my-8 bg-muted"
+        >
           <Image
             src={article.imageUrl}
             alt={article.title}
@@ -287,7 +291,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
             className="object-cover"
             priority
           />
-        </div>
+        </motion.div>
       )}
 
       {/* AI Loading Progress Bar - Show when loading */}
