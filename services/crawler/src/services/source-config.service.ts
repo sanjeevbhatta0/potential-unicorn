@@ -32,7 +32,7 @@ const API_URL = process.env.API_URL || 'http://localhost:3333';
 export async function fetchSourcesFromAPI(): Promise<SourceConfig[]> {
     try {
         logger.info('Fetching sources from API...');
-        const response = await axios.get(`${API_URL}/api/v1/sources/active`);
+        const response = await axios.get(`${API_URL}/api/v1/sources/active`, { timeout: 10000 });
 
         // Handle wrapped response
         const data = response.data;
@@ -58,7 +58,7 @@ export async function updateLastCrawled(sourceId: string): Promise<void> {
     try {
         await axios.patch(`${API_URL}/api/v1/sources/${sourceId}`, {
             lastCrawledAt: new Date().toISOString(),
-        });
+        }, { timeout: 10000 });
     } catch (error: any) {
         logger.warn(`Failed to update lastCrawledAt for source ${sourceId}: ${error.message}`);
     }
