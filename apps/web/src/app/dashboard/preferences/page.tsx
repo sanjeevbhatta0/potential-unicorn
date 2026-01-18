@@ -73,20 +73,20 @@ export default function NewsPreferencesPage() {
 
     return (
         <div className="max-w-3xl">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">News Preferences</h1>
-            <p className="text-gray-600 mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">News Preferences</h1>
+            <p className="text-muted-foreground mb-8">
                 Select the news categories you&apos;re interested in. We&apos;ll personalize your feed based on your selections.
             </p>
 
             {success && (
-                <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+                <div className="mb-6 p-3 bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 rounded-lg flex items-center gap-2">
                     <CheckCircle className="w-5 h-5" />
                     Preferences saved successfully!
                 </div>
             )}
 
             {error && (
-                <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+                <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300 rounded-lg flex items-center gap-2">
                     <AlertCircle className="w-5 h-5" />
                     {error}
                 </div>
@@ -96,17 +96,17 @@ export default function NewsPreferencesPage() {
             <div className="flex gap-4 mb-6">
                 <button
                     onClick={selectAll}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                 >
                     Select All
                 </button>
                 <button
                     onClick={clearAll}
-                    className="text-sm text-gray-600 hover:text-gray-700 font-medium"
+                    className="text-sm text-muted-foreground hover:text-foreground font-medium"
                 >
                     Clear All
                 </button>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-muted-foreground/70">
                     {selectedCategories.length} of {NEWS_CATEGORIES.length} selected
                 </span>
             </div>
@@ -120,27 +120,23 @@ export default function NewsPreferencesPage() {
                         <button
                             key={category.id}
                             onClick={() => toggleCategory(category.id)}
-                            className={`relative p-4 rounded-xl border-2 text-center transition-all ${
-                                isSelected
-                                    ? 'border-blue-500 bg-blue-50'
-                                    : 'border-gray-200 hover:border-gray-300 bg-white'
-                            }`}
+                            className={`relative p-4 rounded-xl border-2 text-center transition-all ${isSelected
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-500'
+                                    : 'border-border hover:border-primary/50 bg-card'
+                                }`}
                         >
                             {isSelected && (
                                 <div className="absolute top-2 right-2">
-                                    <CheckCircle className="w-5 h-5 text-blue-500" />
+                                    <CheckCircle className="w-5 h-5 text-blue-500 dark:text-blue-400" />
                                 </div>
                             )}
-                            <div className={`w-12 h-12 mx-auto rounded-lg flex items-center justify-center mb-3 ${
-                                isSelected ? 'bg-blue-100' : 'bg-gray-100'
-                            }`}>
-                                <Icon className={`w-6 h-6 ${
-                                    isSelected ? 'text-blue-600' : 'text-gray-500'
-                                }`} />
+                            <div className={`w-12 h-12 mx-auto rounded-lg flex items-center justify-center mb-3 ${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : 'bg-muted'
+                                }`}>
+                                <Icon className={`w-6 h-6 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'
+                                    }`} />
                             </div>
-                            <span className={`font-medium ${
-                                isSelected ? 'text-blue-700' : 'text-gray-700'
-                            }`}>
+                            <span className={`font-medium ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-foreground'
+                                }`}>
                                 {category.label}
                             </span>
                         </button>
@@ -153,7 +149,7 @@ export default function NewsPreferencesPage() {
                 <Button onClick={savePreferences} disabled={saving}>
                     {saving ? 'Saving...' : 'Save Preferences'}
                 </Button>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted-foreground">
                     Your preferences will be used to personalize your news feed.
                 </span>
             </div>

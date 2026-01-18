@@ -118,22 +118,22 @@ export default function AccountSettingsPage() {
 
     return (
         <div className="max-w-2xl">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
-            <p className="text-gray-600 mb-8">Manage your profile information and security settings.</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Account Settings</h1>
+            <p className="text-muted-foreground mb-8">Manage your profile information and security settings.</p>
 
             {/* Profile Section */}
-            <section className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h2>
+            <section className="bg-card rounded-xl border border-border p-6 mb-8 shadow-sm">
+                <h2 className="text-xl font-semibold text-foreground mb-6">Profile Information</h2>
 
                 {profileSuccess && (
-                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 rounded-lg flex items-center gap-2">
                         <CheckCircle className="w-5 h-5" />
                         Profile updated successfully!
                     </div>
                 )}
 
                 {profileError && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300 rounded-lg flex items-center gap-2">
                         <AlertCircle className="w-5 h-5" />
                         {profileError}
                     </div>
@@ -214,18 +214,18 @@ export default function AccountSettingsPage() {
             </section>
 
             {/* Password Section */}
-            <section className="bg-white rounded-xl border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h2>
+            <section className="bg-card rounded-xl border border-border p-6 shadow-sm">
+                <h2 className="text-xl font-semibold text-foreground mb-6">Change Password</h2>
 
                 {passwordSuccess && (
-                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 rounded-lg flex items-center gap-2">
                         <CheckCircle className="w-5 h-5" />
                         Password changed successfully!
                     </div>
                 )}
 
                 {passwordError && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300 rounded-lg flex items-center gap-2">
                         <AlertCircle className="w-5 h-5" />
                         {passwordError}
                     </div>

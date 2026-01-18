@@ -100,17 +100,17 @@ export default function BusinessRegistrationPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     return (
         <div className="max-w-2xl">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
                 {business ? 'Manage Your Business' : 'Register Your Business'}
             </h1>
-            <p className="text-gray-600 mb-8">
+            <p className="text-muted-foreground mb-8">
                 {business
                     ? 'Update your business information and manage your advertising features.'
                     : 'Register your business to unlock advertising features and reach thousands of readers.'}
@@ -118,38 +118,38 @@ export default function BusinessRegistrationPage() {
 
             {/* Status Banner */}
             {user?.accountType === 'business' && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 rounded-xl flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
-                        <p className="font-medium text-green-800">Business Account Active</p>
-                        <p className="text-sm text-green-600">You have access to advertising features</p>
+                        <p className="font-medium">Business Account Active</p>
+                        <p className="text-sm text-green-600 dark:text-green-400">You have access to advertising features</p>
                     </div>
                 </div>
             )}
 
             {success && (
-                <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+                <div className="mb-6 p-3 bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 rounded-lg flex items-center gap-2">
                     <CheckCircle className="w-5 h-5" />
                     {business ? 'Business updated successfully!' : 'Business registered successfully! Your account is now a business account.'}
                 </div>
             )}
 
             {error && (
-                <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+                <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300 rounded-lg flex items-center gap-2">
                     <AlertCircle className="w-5 h-5" />
                     {error}
                 </div>
             )}
 
             {/* Business Form */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+            <div className="bg-card rounded-xl border border-border p-6 mb-8 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Building2 className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900">Business Information</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Business Information</h2>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -276,20 +276,20 @@ export default function BusinessRegistrationPage() {
 
             {/* Advertising Info */}
             {user?.accountType === 'business' && (
-                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100 p-6">
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 rounded-xl border border-purple-100 dark:border-purple-900 p-6">
                     <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Megaphone className="w-5 h-5 text-purple-600" />
+                        <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Megaphone className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            <h3 className="text-lg font-semibold text-foreground mb-1">
                                 Advertise with Us
                             </h3>
-                            <p className="text-sm text-gray-600 mb-3">
+                            <p className="text-sm text-muted-foreground mb-3">
                                 As a business account holder, you can publish ads on our website and reach thousands of readers.
                                 Our advertising feature is coming soon!
                             </p>
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-700">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
                                 Coming Soon
                             </span>
                         </div>
