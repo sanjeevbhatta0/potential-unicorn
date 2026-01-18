@@ -138,7 +138,13 @@ export function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logout()}>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard" className="w-full cursor-pointer font-medium">
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => logout()} className="text-red-500 focus:text-red-500 font-medium">
                   Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
