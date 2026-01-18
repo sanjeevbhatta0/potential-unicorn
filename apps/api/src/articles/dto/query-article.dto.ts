@@ -74,4 +74,10 @@ export class QueryArticleDto {
   @IsOptional()
   @IsEnum(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc' = 'desc';
+
+  @ApiProperty({ description: 'Include integration test articles', required: false, default: false })
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  includeTests?: boolean = false;
 }

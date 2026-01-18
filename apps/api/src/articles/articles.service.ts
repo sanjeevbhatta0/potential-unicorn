@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, Like, Between } from 'typeorm';
+import { Repository, FindOptionsWhere, Like, Between, Not } from 'typeorm';
 import { ArticleEntity } from '../database/entities/article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -99,6 +99,7 @@ export class ArticlesService {
       limit = 10,
       sortBy = 'publishedAt',
       sortOrder = 'desc',
+      includeTests = false,
     } = query;
 
     const where: FindOptionsWhere<ArticleEntity> = {};
@@ -108,15 +109,17 @@ export class ArticlesService {
     if (sourceId) where.sourceId = sourceId;
     if (isTrending !== undefined) where.isTrending = isTrending;
 
-    // Date range filter
     if (dateFrom && dateTo) {
       where.publishedAt = Between(new Date(dateFrom), new Date(dateTo));
     }
 
-    // Search filter
     if (search) {
-      // Note: This is a simple implementation. For production, consider using full-text search
       where.title = Like(`%${search}%`);
+    }
+
+    // Exclude test articles unless explicitly requested
+    if (!includeTests && !search) {
+      where.title = Not(Like('Integration Test Article%'));
     }
 
     const [data, total] = await this.articleRepository.findAndCount({
@@ -140,6 +143,7 @@ export class ArticlesService {
       },
     };
   }
+
 
   async findOne(id: string): Promise<ArticleEntity> {
     const article = await this.articleRepository.findOne({

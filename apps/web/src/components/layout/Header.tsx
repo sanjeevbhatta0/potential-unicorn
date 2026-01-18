@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTheme } from '@/app/providers';
 import { useAuth } from '@/contexts/AuthContext';
 import { SignInDialog } from '../auth/SignInDialog';
@@ -64,9 +64,21 @@ function MoonIcon() {
   );
 }
 
+// Navigation items
+const NAV_ITEMS = [
+  { label: 'All', href: '/' },
+  { label: 'Politics', href: '/?category=politics' },
+  { label: 'Sports', href: '/?category=sports' },
+  { label: 'Business', href: '/?category=business' },
+  { label: 'Technology', href: '/?category=technology' },
+  { label: 'Entertainment', href: '/?category=entertainment' },
+];
+
 export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeCategory = searchParams.get('category');
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
 
@@ -84,47 +96,53 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      {/* Top Row: Logo, Search, Actions */}
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <img src="/logo.png" alt="NewsChautari" className="h-8 w-8" />
+        <Link href="/" className="flex items-center space-x-3 group">
+          <div className="relative h-9 w-9 overflow-hidden rounded-md transition-transform group-hover:scale-105">
+            <img src="/logo.png" alt="NewsChautari" className="h-full w-full object-cover" />
+          </div>
           <div className="flex flex-col">
-            <span className="text-lg font-serif font-bold tracking-tight leading-tight">NewsChautari</span>
-            <span className="text-[10px] text-muted-foreground leading-none hidden sm:block">Smart. Short. Simple.</span>
+            <span className="text-xl font-serif font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
+              NewsChautari
+            </span>
+            <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase leading-none">
+              Smart. Short. Simple.
+            </span>
           </div>
         </Link>
 
         {/* Search and Actions */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 md:space-x-4">
+          <form onSubmit={handleSearch} className="hidden md:flex relative group">
+            <Input
+              type="search"
+              placeholder="Search news..."
+              className="w-48 bg-muted/50 border-transparent focus:border-primary focus:bg-background transition-all duration-300 group-hover:w-64"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
+
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleTheme}
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-foreground transition-colors hover:bg-muted"
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 text-foreground transition-colors hover:bg-muted hover:text-primary"
+            aria-label="Toggle theme"
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
 
-          <form onSubmit={handleSearch} className="hidden md:flex">
-            <div className="relative">
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="w-48 border-foreground/20 focus:border-primary"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </form>
-
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    {/* Placeholder for avatarUrl if available */}
-                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                      {getUserInitials()}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -144,14 +162,14 @@ export function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logout()} className="text-red-500 focus:text-red-500 font-medium">
+                <DropdownMenuItem onClick={() => logout()} className="text-red-500 font-medium cursor-pointer">
                   Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <SignInDialog>
-              <Button variant="default" size="sm" className="font-semibold">
+              <Button variant="default" size="sm" className="font-semibold rounded-full px-5 shadow-sm hover:shadow-md transition-shadow">
                 Sign In
               </Button>
             </SignInDialog>
@@ -159,17 +177,31 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Search */}
-      <div className="container mx-auto px-4 pb-3 md:hidden">
-        <form onSubmit={handleSearch}>
-          <Input
-            type="search"
-            placeholder="Search news..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border-foreground/20"
-          />
-        </form>
+      {/* Navigation Row - Horizontal Scrollable */}
+      <div className="border-t border-border/40">
+        <div className="container mx-auto px-4">
+          <nav className="flex space-x-1 overflow-x-auto py-2 scrollbar-none mask-image-fade">
+            {NAV_ITEMS.map((item) => {
+              const isActive = (!activeCategory && item.href === '/') ||
+                (activeCategory && item.href.includes(activeCategory));
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`
+                     whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200
+                     ${isActive
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }
+                   `}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
     </header>
   );

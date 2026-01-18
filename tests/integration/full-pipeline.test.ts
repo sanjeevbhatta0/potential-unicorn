@@ -22,6 +22,7 @@ const api = axios.create({
     baseURL: API_URL,
     timeout: 30000,
     validateStatus: () => true, // Don't throw on error status
+    params: { includeTests: true }, // Include test results
 });
 
 const aiService = axios.create({
