@@ -116,7 +116,7 @@ describe('Sources API (e2e)', () => {
 
                 expect(response.body.id).toBe(sourceId);
                 expect(response.body).toHaveProperty('name');
-                expect(response.body).toHaveProperty('url');
+                expect(response.body).toHaveProperty('baseUrl');
                 expect(response.body).toHaveProperty('type');
             }
         });

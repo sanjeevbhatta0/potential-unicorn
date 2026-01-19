@@ -54,20 +54,26 @@ This is the summary text.
 [KEY POINTS]
 - Point 1
 - Point 2
-- Point 3"""
+- Point 3
 
-    summary, key_points = summarizer._parse_response(content, True)
+[CATEGORY]
+Politics"""
+
+    summary, key_points, category = summarizer._parse_response(content, True, "Test Title", "Test content about politics and government")
     assert summary == "This is the summary text."
     assert len(key_points) == 3
     assert "Point 1" in key_points
+    assert category == "politics"
 
 
 def test_parse_response_without_markers(summarizer):
     """Test response parsing without markers."""
     content = "This is just the summary text."
-    summary, key_points = summarizer._parse_response(content, True)
+    summary, key_points, category = summarizer._parse_response(content, True, "", "")
     assert summary == content
     assert key_points is None
+    # Category will default to "general" when no markers and no keyword matches
+    assert category == "general"
 
 
 @pytest.mark.asyncio

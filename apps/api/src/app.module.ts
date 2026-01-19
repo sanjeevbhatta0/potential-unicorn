@@ -8,6 +8,7 @@ import { SourcesModule } from './sources/sources.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AISettingsModule } from './ai-settings/ai-settings.module';
+import { AppSettingsModule } from './app-settings/app-settings.module';
 import { BusinessModule } from './business/business.module';
 import { databaseConfig } from './config/database.config';
 import { jwtConfig } from './config/jwt.config';
@@ -50,6 +51,7 @@ import { appConfig } from './config/app.config';
     UsersModule,
     AuthModule,
     AISettingsModule,
+    AppSettingsModule,
     BusinessModule,
   ],
   controllers: [AppController],

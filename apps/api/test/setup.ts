@@ -105,7 +105,7 @@ export const TestDataFactory = {
     createUser: (overrides: Partial<any> = {}) => ({
         email: `testuser-${Date.now()}@test.com`,
         password: 'TestPassword123!',
-        name: 'Test User',
+        fullName: 'Test User',
         ...overrides,
     }),
 };

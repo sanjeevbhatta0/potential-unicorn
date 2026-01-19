@@ -8,6 +8,10 @@ interface Stats {
     defaultModel: string | null;
 }
 
+interface AppSettings {
+    balancedFeedEnabled: { value: boolean; description?: string };
+}
+
 export default function AdminDashboard() {
     const [stats, setStats] = useState<Stats>({
         totalArticles: 0,
@@ -15,11 +19,16 @@ export default function AdminDashboard() {
         defaultModel: null,
     });
     const [loading, setLoading] = useState(true);
+    const [appSettings, setAppSettings] = useState<AppSettings>({
+        balancedFeedEnabled: { value: false },
+    });
+    const [settingsLoading, setSettingsLoading] = useState(false);
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
 
     useEffect(() => {
-        async function fetchStats() {
+        async function fetchData() {
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
                 const token = localStorage.getItem('token');
 
                 // Fetch AI settings count
@@ -29,7 +38,6 @@ export default function AdminDashboard() {
 
                 if (aiRes.ok) {
                     const rawData = await aiRes.json();
-                    // Handle wrapped response: {success, data: [...]}
                     const aiSettings = Array.isArray(rawData) ? rawData : (rawData.data || []);
                     const defaultModel = aiSettings.find((s: any) => s.isDefault);
                     setStats({
@@ -38,15 +46,52 @@ export default function AdminDashboard() {
                         defaultModel: defaultModel ? `${defaultModel.name} (${defaultModel.provider})` : null,
                     });
                 }
+
+                // Fetch App Settings
+                const settingsRes = await fetch(`${API_URL}/api/v1/app-settings`);
+                if (settingsRes.ok) {
+                    const settingsData = await settingsRes.json();
+                    if (settingsData.success && settingsData.data) {
+                        setAppSettings(settingsData.data);
+                    }
+                }
             } catch (error) {
-                console.error('Failed to fetch stats:', error);
+                console.error('Failed to fetch data:', error);
             } finally {
                 setLoading(false);
             }
         }
 
-        fetchStats();
-    }, []);
+        fetchData();
+    }, [API_URL]);
+
+    const toggleBalancedFeed = async () => {
+        try {
+            setSettingsLoading(true);
+            const token = localStorage.getItem('token');
+            const newValue = !appSettings.balancedFeedEnabled?.value;
+
+            const res = await fetch(`${API_URL}/api/v1/app-settings/balancedFeedEnabled`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ value: newValue }),
+            });
+
+            if (res.ok) {
+                setAppSettings(prev => ({
+                    ...prev,
+                    balancedFeedEnabled: { ...prev.balancedFeedEnabled, value: newValue },
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to update setting:', error);
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
 
     const statCards = [
         { label: 'Active AI Models', value: stats.activeModels, icon: '🤖', color: 'blue' },
@@ -86,6 +131,32 @@ export default function AdminDashboard() {
                 </div>
             )}
 
+            {/* Feed Settings */}
+            <div className="mt-12">
+                <h2 className="text-xl font-semibold text-white mb-4">Feed Settings</h2>
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-white font-medium">Balanced Feed</h3>
+                            <p className="text-gray-400 text-sm mt-1">
+                                Show articles from all sources evenly on the homepage
+                            </p>
+                        </div>
+                        <button
+                            onClick={toggleBalancedFeed}
+                            disabled={settingsLoading}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${appSettings.balancedFeedEnabled?.value ? 'bg-blue-600' : 'bg-gray-600'
+                                } ${settingsLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${appSettings.balancedFeedEnabled?.value ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                            />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div className="mt-12">
                 <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -114,3 +185,4 @@ export default function AdminDashboard() {
         </div>
     );
 }
+

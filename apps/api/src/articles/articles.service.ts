@@ -7,12 +7,13 @@ import {
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, Like, Between, Not } from 'typeorm';
+import { Repository, FindOptionsWhere, Like, Between, Not, In } from 'typeorm';
 import { ArticleEntity } from '../database/entities/article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { QueryArticleDto } from './dto/query-article.dto';
 import { PaginatedResponse } from '@potential-unicorn/types';
+import { AppSettingsService } from '../app-settings/app-settings.service';
 
 // Keyword mappings for category detection (supports both English and Nepali)
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -69,6 +70,7 @@ export class ArticlesService {
     @InjectRepository(ArticleEntity)
     private readonly articleRepository: Repository<ArticleEntity>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly appSettingsService: AppSettingsService,
   ) { }
 
   async create(createArticleDto: CreateArticleDto): Promise<ArticleEntity> {
@@ -106,7 +108,11 @@ export class ArticlesService {
       includeTests = false,
     } = query;
 
-    const cacheKey = `articles_list_${JSON.stringify(query)}`;
+    // Check if balanced feed should be used (page 1, no specific filters)
+    const isBalancedEligible = page === 1 && !category && !sourceId && !search && !isTrending;
+    const isBalancedEnabled = await this.appSettingsService.isBalancedFeedEnabled();
+
+    const cacheKey = `articles_list_${JSON.stringify(query)}_balanced_${isBalancedEnabled}`;
 
     // Check cache
     const cached = await this.cacheManager.get<PaginatedResponse<ArticleEntity>>(cacheKey);
@@ -114,33 +120,44 @@ export class ArticlesService {
       return cached;
     }
 
-    const where: FindOptionsWhere<ArticleEntity> = {};
+    let data: ArticleEntity[];
+    let total: number;
 
-    if (category) where.category = category;
-    if (language) where.language = language;
-    if (sourceId) where.sourceId = sourceId;
-    if (isTrending !== undefined) where.isTrending = isTrending;
+    if (isBalancedEligible && isBalancedEnabled) {
+      // Use balanced feed algorithm
+      const balancedResult = await this.findAllBalanced(limit, includeTests);
+      data = balancedResult.articles;
+      total = balancedResult.total;
+    } else {
+      // Standard query
+      const where: FindOptionsWhere<ArticleEntity> = {};
 
-    if (dateFrom && dateTo) {
-      where.publishedAt = Between(new Date(dateFrom), new Date(dateTo));
+      if (category) where.category = category;
+      if (language) where.language = language;
+      if (sourceId) where.sourceId = sourceId;
+      if (isTrending !== undefined) where.isTrending = isTrending;
+
+      if (dateFrom && dateTo) {
+        where.publishedAt = Between(new Date(dateFrom), new Date(dateTo));
+      }
+
+      if (search) {
+        where.title = Like(`%${search}%`);
+      }
+
+      // Exclude test articles unless explicitly requested
+      if (!includeTests && !search) {
+        where.title = Not(Like('Integration Test Article%'));
+      }
+
+      [data, total] = await this.articleRepository.findAndCount({
+        where,
+        relations: ['source'],
+        order: { [sortBy]: sortOrder.toUpperCase() },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
     }
-
-    if (search) {
-      where.title = Like(`%${search}%`);
-    }
-
-    // Exclude test articles unless explicitly requested
-    if (!includeTests && !search) {
-      where.title = Not(Like('Integration Test Article%'));
-    }
-
-    const [data, total] = await this.articleRepository.findAndCount({
-      where,
-      relations: ['source'],
-      order: { [sortBy]: sortOrder.toUpperCase() },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
 
     const totalPages = Math.ceil(total / limit);
 
@@ -160,6 +177,64 @@ export class ArticlesService {
 
     return result;
   }
+
+  /**
+   * Fetch articles with balanced representation from all sources
+   */
+  private async findAllBalanced(
+    limit: number,
+    includeTests: boolean,
+  ): Promise<{ articles: ArticleEntity[]; total: number }> {
+    // Get all distinct source IDs that have articles
+    const sourceIds = await this.articleRepository
+      .createQueryBuilder('article')
+      .select('DISTINCT article.sourceId', 'sourceId')
+      .getRawMany();
+
+    const numSources = sourceIds.length;
+    if (numSources === 0) {
+      return { articles: [], total: 0 };
+    }
+
+    // Calculate articles per source (ensure at least 1 per source)
+    const articlesPerSource = Math.max(1, Math.ceil(limit / numSources));
+
+    // Fetch articles from each source
+    const allArticles: ArticleEntity[] = [];
+
+    for (const { sourceId } of sourceIds) {
+      const whereCondition: FindOptionsWhere<ArticleEntity> = { sourceId };
+
+      if (!includeTests) {
+        whereCondition.title = Not(Like('Integration Test Article%'));
+      }
+
+      const sourceArticles = await this.articleRepository.find({
+        where: whereCondition,
+        relations: ['source'],
+        order: { publishedAt: 'DESC' },
+        take: articlesPerSource,
+      });
+
+      allArticles.push(...sourceArticles);
+    }
+
+    // Sort all articles by publishedAt and take the top `limit`
+    allArticles.sort((a, b) =>
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    );
+
+    // Get total count for pagination
+    const total = await this.articleRepository.count({
+      where: includeTests ? {} : { title: Not(Like('Integration Test Article%')) },
+    });
+
+    return {
+      articles: allArticles.slice(0, limit),
+      total,
+    };
+  }
+
 
 
   async findOne(id: string): Promise<ArticleEntity> {

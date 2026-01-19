@@ -26,10 +26,12 @@ describe('Auth API (e2e)', () => {
                 .send(userData)
                 .expect(201);
 
-            expect(response.body).toHaveProperty('access_token');
-            expect(response.body).toHaveProperty('user');
-            expect(response.body.user.email).toBe(userData.email);
-            expect(response.body.user).not.toHaveProperty('passwordHash');
+            // Response may be wrapped in data property
+            const body = response.body.data || response.body;
+            expect(body).toHaveProperty('accessToken');
+            expect(body).toHaveProperty('user');
+            expect(body.user.email).toBe(userData.email);
+            expect(body.user).not.toHaveProperty('passwordHash');
         });
 
         it('should reject duplicate email registration', async () => {
@@ -92,10 +94,12 @@ describe('Auth API (e2e)', () => {
                     email: userData.email,
                     password: userData.password,
                 })
-                .expect(200);
+                .expect(201);
 
-            expect(response.body).toHaveProperty('access_token');
-            authToken = response.body.access_token;
+            // Response may be wrapped in data property
+            const body = response.body.data || response.body;
+            expect(body).toHaveProperty('accessToken');
+            authToken = body.accessToken;
         });
 
         it('should reject invalid password', async () => {
@@ -138,15 +142,17 @@ describe('Auth API (e2e)', () => {
                 .send(userData)
                 .expect(201);
 
-            const token = registerResponse.body.access_token;
+            const token = (registerResponse.body.data || registerResponse.body).accessToken;
 
             const response = await getRequest()
                 .get('/auth/me')
                 .set('Authorization', `Bearer ${token}`)
                 .expect(200);
 
-            expect(response.body.email).toBe(userData.email);
-            expect(response.body).not.toHaveProperty('passwordHash');
+            // Response may be wrapped in data property
+            const body = response.body.data || response.body;
+            expect(body.email).toBe(userData.email);
+            expect(body).not.toHaveProperty('passwordHash');
         });
 
         it('should reject request without token', async () => {
