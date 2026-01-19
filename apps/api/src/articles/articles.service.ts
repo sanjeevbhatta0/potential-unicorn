@@ -2,7 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, Like, Between, Not } from 'typeorm';
 import { ArticleEntity } from '../database/entities/article.entity';
@@ -65,6 +68,7 @@ export class ArticlesService {
   constructor(
     @InjectRepository(ArticleEntity)
     private readonly articleRepository: Repository<ArticleEntity>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) { }
 
   async create(createArticleDto: CreateArticleDto): Promise<ArticleEntity> {
@@ -102,6 +106,14 @@ export class ArticlesService {
       includeTests = false,
     } = query;
 
+    const cacheKey = `articles_list_${JSON.stringify(query)}`;
+
+    // Check cache
+    const cached = await this.cacheManager.get<PaginatedResponse<ArticleEntity>>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const where: FindOptionsWhere<ArticleEntity> = {};
 
     if (category) where.category = category;
@@ -132,7 +144,7 @@ export class ArticlesService {
 
     const totalPages = Math.ceil(total / limit);
 
-    return {
+    const result = {
       data,
       pagination: {
         total,
@@ -142,6 +154,11 @@ export class ArticlesService {
         hasMore: page < totalPages,
       },
     };
+
+    // Set cache (5 minutes)
+    await this.cacheManager.set(cacheKey, result, 300000);
+
+    return result;
   }
 
 
@@ -181,24 +198,38 @@ export class ArticlesService {
   }
 
   async findTrending(limit: number = 10): Promise<ArticleEntity[]> {
-    return this.articleRepository.find({
+    const cacheKey = `articles_trending_${limit}`;
+    const cached = await this.cacheManager.get<ArticleEntity[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.articleRepository.find({
       where: { isTrending: true },
       relations: ['source'],
       order: { viewCount: 'DESC' },
       take: limit,
-    });
+    }); // Fixed missing paren/brace in original view if any, ensuring correct closure
+
+    await this.cacheManager.set(cacheKey, result, 300000);
+    return result;
   }
 
   async findByCategory(
     category: string,
     limit: number = 10,
   ): Promise<ArticleEntity[]> {
-    return this.articleRepository.find({
+    const cacheKey = `articles_category_${category}_${limit}`;
+    const cached = await this.cacheManager.get<ArticleEntity[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.articleRepository.find({
       where: { category: category as any },
       relations: ['source'],
       order: { publishedAt: 'DESC' },
       take: limit,
     });
+
+    await this.cacheManager.set(cacheKey, result, 300000);
+    return result;
   }
 
   /**

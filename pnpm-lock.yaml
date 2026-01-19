@@ -32,6 +32,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@nestjs/cache-manager':
+        specifier: ^3.1.0
+        version: 3.1.0(@nestjs/common@10.4.22)(@nestjs/core@10.4.22)(cache-manager@7.2.8)(keyv@5.5.5)(rxjs@7.8.2)
       '@nestjs/common':
         specifier: ^10.3.0
         version: 10.4.22(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.1.14)(rxjs@7.8.2)
@@ -65,6 +68,9 @@ importers:
       bcrypt:
         specifier: ^5.1.1
         version: 5.1.1
+      cache-manager:
+        specifier: ^7.2.8
+        version: 7.2.8
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -707,6 +713,13 @@ packages:
   /@borewit/text-codec@0.2.1:
     resolution: {integrity: sha512-k7vvKPbf7J2fZ5klGRD9AeKfUvojuZIQ3BT5u7Jfv+puwXkUBUT5PVyMDfJZpy30CBDXGMgw7fguK/lpOMBvgw==}
 
+  /@cacheable/utils@2.3.3:
+    resolution: {integrity: sha512-JsXDL70gQ+1Vc2W/KUFfkAJzgb4puKwwKehNLuB+HrNKWf91O736kGfxn4KujXCCSuh6mRRL4XEB0PkAFjWS0A==}
+    dependencies:
+      hashery: 1.4.0
+      keyv: 5.5.5
+    dev: false
+
   /@colors/colors@1.5.0:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
     engines: {node: '>=0.1.90'}
@@ -1137,6 +1150,10 @@ packages:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  /@keyv/serialize@1.1.1:
+    resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
+    dev: false
+
   /@ljharb/through@2.3.14:
     resolution: {integrity: sha512-ajBvlKpWucBB17FuQYUShqpqy8GRgYEpJW0vWJbUu1CV9lWyrDCapy0lScU8T8Z6qn49sSwJB3+M+evYIdGg+A==}
     engines: {node: '>= 0.4'}
@@ -1221,6 +1238,22 @@ packages:
       '@tybys/wasm-util': 0.10.1
     dev: true
     optional: true
+
+  /@nestjs/cache-manager@3.1.0(@nestjs/common@10.4.22)(@nestjs/core@10.4.22)(cache-manager@7.2.8)(keyv@5.5.5)(rxjs@7.8.2):
+    resolution: {integrity: sha512-pEIqYZrBcE8UdkJmZRduurvoUfdU+3kRPeO1R2muiMbZnRuqlki5klFFNllO9LyYWzrx98bd1j0PSPKSJk1Wbw==}
+    peerDependencies:
+      '@nestjs/common': ^9.0.0 || ^10.0.0 || ^11.0.0
+      '@nestjs/core': ^9.0.0 || ^10.0.0 || ^11.0.0
+      cache-manager: '>=6'
+      keyv: '>=5'
+      rxjs: ^7.8.1
+    dependencies:
+      '@nestjs/common': 10.4.22(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+      '@nestjs/core': 10.4.22(@nestjs/common@10.4.22)(@nestjs/platform-express@10.4.22)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+      cache-manager: 7.2.8
+      keyv: 5.5.5
+      rxjs: 7.8.2
+    dev: false
 
   /@nestjs/cli@10.4.9:
     resolution: {integrity: sha512-s8qYd97bggqeK7Op3iD49X2MpFtW4LVNLAwXFkfbRxKME6IYT7X0muNTJ2+QfI8hpbNx9isWkrLWIp+g5FOhiA==}
@@ -3771,6 +3804,13 @@ packages:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
     engines: {node: '>= 0.8'}
 
+  /cache-manager@7.2.8:
+    resolution: {integrity: sha512-0HDaDLBBY/maa/LmUVAr70XUOwsiQD+jyzCBjmUErYZUKdMS9dT59PqW59PpVqfGM7ve6H0J6307JTpkCYefHQ==}
+    dependencies:
+      '@cacheable/utils': 2.3.3
+      keyv: 5.5.5
+    dev: false
+
   /call-bind-apply-helpers@1.0.2:
     resolution: {integrity: sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==}
     engines: {node: '>= 0.4'}
@@ -5689,11 +5729,22 @@ packages:
     resolution: {integrity: sha512-8Rf9Y83NBReMnx0gFzA8JImQACstCYWUplepDa9xprwwtmgEZUF0h/i5xSA625zB/I37EtrswSST6OXxwaaIJQ==}
     dev: false
 
+  /hashery@1.4.0:
+    resolution: {integrity: sha512-Wn2i1In6XFxl8Az55kkgnFRiAlIAushzh26PTjL2AKtQcEfXrcLa7Hn5QOWGZEf3LU057P9TwwZjFyxfS1VuvQ==}
+    engines: {node: '>=20'}
+    dependencies:
+      hookified: 1.15.0
+    dev: false
+
   /hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
     dependencies:
       function-bind: 1.1.2
+
+  /hookified@1.15.0:
+    resolution: {integrity: sha512-51w+ZZGt7Zw5q7rM3nC4t3aLn/xvKDETsXqMczndvwyVQhAHfUmUuFBRFcos8Iyebtk7OAE9dL26wFNzZVVOkw==}
+    dev: false
 
   /html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
@@ -6772,6 +6823,12 @@ packages:
     dependencies:
       json-buffer: 3.0.1
     dev: true
+
+  /keyv@5.5.5:
+    resolution: {integrity: sha512-FA5LmZVF1VziNc0bIdCSA1IoSVnDCqE8HJIZZv2/W8YmoAM50+tnUgJR/gQZwEeIMleuIOnRnHA/UaZRNeV4iQ==}
+    dependencies:
+      '@keyv/serialize': 1.1.1
+    dev: false
 
   /kleur@3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}

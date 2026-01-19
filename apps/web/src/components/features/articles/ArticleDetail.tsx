@@ -5,7 +5,7 @@ import { Article } from '@potential-unicorn/types';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { useArticleStore } from '@/lib/store/articleStore';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useIncrementViewCount } from '@/lib/hooks/useArticles';
 import { cn } from '@/lib/utils/cn';
 import { motion } from 'framer-motion';
@@ -127,9 +127,14 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
   }, []);
 
   // Effect 1: Increment View Count
+  const hasViewedRef = useRef(false);
+
   useEffect(() => {
-    incrementViewCount.mutate(article.id);
-  }, [article.id, incrementViewCount]);
+    if (!hasViewedRef.current) {
+      incrementViewCount.mutate(article.id);
+      hasViewedRef.current = true;
+    }
+  }, [article.id, incrementViewCount]); // mutation object might change, but ref guards it
 
   // Effect 2: AI Summary Logic
   useEffect(() => {
@@ -225,7 +230,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
         progressCleanup();
       }
     };
-  }, [article.id, simulateProgress, article]); // Kept `article` to catch updates, but logic guards against loops via checks
+  }, [article.id, simulateProgress, article.aiSummary, article.credibilityScore, article.category]); // Depend on specific fields, not entire object
 
 
   return (
