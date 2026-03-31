@@ -2,6 +2,10 @@ import axios, { AxiosInstance } from 'axios';
 import * as cheerio from 'cheerio';
 import logger from '../utils/logger';
 import { SourceConfig } from '../services/source-config.service';
+import { discoverFeedUrl, fetchRSSArticles } from '../discovery/rss.discovery';
+import { discoverSitemapUrl, fetchSitemapArticles } from '../discovery/sitemap.discovery';
+import { isUrlAllowed, getCrawlDelay } from '../discovery/robots.checker';
+import incrementalTracker from '../discovery/incremental.tracker';
 
 export interface Article {
     url: string;
@@ -17,8 +21,18 @@ export interface Article {
     crawledAt: Date;
 }
 
+type DiscoveryMethod = 'rss' | 'sitemap' | 'html';
+
 /**
- * Generic crawler that works with any source configuration from the database
+ * Generic crawler with a layered discovery pipeline:
+ *   1. RSS feed (most reliable, structured metadata)
+ *   2. News sitemap (structured, good for recent articles)
+ *   3. HTML scraping (fallback, selector-based)
+ *
+ * Cross-cutting concerns applied to all methods:
+ *   - robots.txt compliance
+ *   - Incremental crawling (stop at previously-seen articles)
+ *   - Per-site rate limiting (respects robots.txt Crawl-delay)
  */
 export class GenericCrawler {
     private source: SourceConfig;
@@ -86,55 +100,95 @@ export class GenericCrawler {
         throw new Error(`Failed to fetch ${url}`);
     }
 
+    // ─── Discovery Layer ──────────────────────────────────────────────
+
     /**
-     * Find article links on the homepage
+     * Try RSS feed for article discovery.
      */
-    async findArticleLinks(): Promise<string[]> {
+    private async discoverViaRSS(): Promise<string[]> {
+        const feedUrl = await discoverFeedUrl(
+            this.source.baseUrl,
+            this.source.crawlConfig?.rssFeedUrl
+        );
+
+        if (!feedUrl) return [];
+
+        const rssArticles = await fetchRSSArticles(feedUrl, this.maxArticles);
+        const urls = rssArticles.map(a => a.url).filter(Boolean);
+
+        if (urls.length > 0) {
+            logger.info(`[${this.source.name}] RSS discovery found ${urls.length} articles`);
+        }
+
+        return urls;
+    }
+
+    /**
+     * Try sitemap for article discovery.
+     */
+    private async discoverViaSitemap(): Promise<string[]> {
+        const sitemapUrl = this.source.crawlConfig?.sitemapUrl
+            || await discoverSitemapUrl(this.source.baseUrl);
+
+        if (!sitemapUrl) return [];
+
+        const sitemapArticles = await fetchSitemapArticles(sitemapUrl, this.maxArticles);
+        const urls = sitemapArticles.map(a => a.url).filter(Boolean);
+
+        if (urls.length > 0) {
+            logger.info(`[${this.source.name}] Sitemap discovery found ${urls.length} articles`);
+        }
+
+        return urls;
+    }
+
+    /**
+     * Fallback: HTML scraping for article discovery.
+     */
+    private async discoverViaHTML(): Promise<string[]> {
         try {
             const html = await this.fetchHtml(this.source.baseUrl);
             const $ = cheerio.load(html);
             const links: string[] = [];
             const baseUrl = new URL(this.source.baseUrl);
 
-            // Use custom selector if provided, otherwise use common patterns
             const articleSelector = this.source.crawlConfig?.selectors?.article || 'a[href]';
 
             $(articleSelector).each((_, el) => {
                 let href = $(el).attr('href');
                 if (!href) return;
 
-                // Convert relative URLs to absolute
                 if (href.startsWith('/')) {
                     href = `${baseUrl.origin}${href}`;
                 } else if (!href.startsWith('http')) {
-                    return; // Skip non-http links
+                    return;
                 }
 
-                // Filter to only include article-like URLs
                 if (this.isArticleUrl(href)) {
                     links.push(href);
                 }
             });
 
-            // Remove duplicates and limit
             const uniqueLinks = [...new Set(links)].slice(0, this.maxArticles);
-            logger.info(`Found ${uniqueLinks.length} article links for ${this.source.name}`);
+            if (uniqueLinks.length > 0) {
+                logger.info(`[${this.source.name}] HTML discovery found ${uniqueLinks.length} articles`);
+            }
             return uniqueLinks;
         } catch (error: any) {
-            logger.error(`Failed to find article links for ${this.source.name}: ${error.message}`);
+            logger.error(`[${this.source.name}] HTML discovery failed: ${error.message}`);
             return [];
         }
     }
 
     /**
-     * Check if a URL looks like an article
+     * Check if a URL looks like an article.
      */
     private isArticleUrl(url: string): boolean {
         const articlePatterns = [
-            /\/\d{4}\/\d{2}\//, // Date patterns: /2024/01/
+            /\/\d{4}\/\d{2}\//,
             /\/news\//, /\/article\//, /\/story\//,
             /\/politics\//, /\/social\//, /\/business\//, /\/sports\//, /\/entertainment\//,
-            /\/\d+\/?$/, // Ends with number (article ID)
+            /\/\d+\/?$/,
         ];
 
         const excludePatterns = [
@@ -150,11 +204,20 @@ export class GenericCrawler {
         return isArticle && !isExcluded;
     }
 
+    // ─── Article Extraction ───────────────────────────────────────────
+
     /**
-     * Extract article content from a page
+     * Extract article content from a page.
      */
     async extractArticle(url: string): Promise<Article | null> {
         try {
+            // robots.txt check
+            const allowed = await isUrlAllowed(url);
+            if (!allowed) {
+                logger.debug(`[${this.source.name}] Skipping disallowed URL: ${url}`);
+                return null;
+            }
+
             const html = await this.fetchHtml(url);
             const $ = cheerio.load(html);
             const selectors = this.source.crawlConfig?.selectors || {};
@@ -169,7 +232,6 @@ export class GenericCrawler {
             if (selectors.content) {
                 content = $(selectors.content).text().trim();
             } else {
-                // Try common content selectors
                 const contentSelectors = [
                     'article', '.article-content', '.post-content', '.entry-content',
                     '.news-content', '.story-content', '.main-content', '[class*="article"]',
@@ -182,23 +244,19 @@ export class GenericCrawler {
                 }
             }
 
-            // Skip if no meaningful content
             if (!title || title.length < 5 || !content || content.length < 100) {
                 return null;
             }
 
-            // Extract image
             let image = selectors.image
                 ? $(selectors.image).attr('src')
                 : $('article img, .article img, [class*="featured"] img, meta[property="og:image"]').first().attr('content') ||
                 $('article img, .article img').first().attr('src');
 
-            // Extract author
             let author = selectors.author
                 ? $(selectors.author).text().trim()
                 : $('[class*="author"], [rel="author"], .byline').first().text().trim();
 
-            // Extract date
             let publishDate = selectors.date
                 ? $(selectors.date).text().trim()
                 : $('time, [class*="date"], [class*="published"]').first().attr('datetime') ||
@@ -216,38 +274,85 @@ export class GenericCrawler {
                 crawledAt: new Date(),
             };
         } catch (error: any) {
-            logger.warn(`Failed to extract article from ${url}: ${error.message}`);
+            logger.warn(`[${this.source.name}] Failed to extract article from ${url}: ${error.message}`);
             return null;
         }
     }
 
+    // ─── Main Crawl Pipeline ──────────────────────────────────────────
+
     /**
-     * Crawl all articles from this source
+     * Crawl all articles from this source using the layered discovery pipeline.
      */
     async crawl(): Promise<Article[]> {
-        logger.info(`Starting crawl for ${this.source.name}`);
+        logger.info(`[${this.source.name}] Starting crawl`);
         const articles: Article[] = [];
 
-        try {
-            const links = await this.findArticleLinks();
+        // Respect robots.txt crawl delay if specified
+        const robotsDelay = await getCrawlDelay(this.source.baseUrl);
+        if (robotsDelay && robotsDelay > this.delayBetweenRequests) {
+            logger.info(`[${this.source.name}] Respecting robots.txt crawl-delay: ${robotsDelay}ms`);
+            this.delayBetweenRequests = robotsDelay;
+        }
 
-            for (const link of links) {
-                try {
-                    logger.info(`Crawling: ${link}`);
-                    const article = await this.extractArticle(link);
-                    if (article) {
-                        articles.push(article);
-                    }
-                } catch (error: any) {
-                    logger.warn(`Error crawling ${link}: ${error.message}`);
-                }
+        // === Discovery: try methods in priority order ===
+        let articleUrls: string[] = [];
+        let method: DiscoveryMethod = 'html';
+
+        // 1. Try RSS
+        articleUrls = await this.discoverViaRSS();
+        if (articleUrls.length > 0) {
+            method = 'rss';
+        }
+
+        // 2. Try sitemap if RSS found nothing
+        if (articleUrls.length === 0) {
+            articleUrls = await this.discoverViaSitemap();
+            if (articleUrls.length > 0) {
+                method = 'sitemap';
             }
+        }
 
-            logger.info(`Crawled ${articles.length} articles from ${this.source.name}`);
-            return articles;
-        } catch (error: any) {
-            logger.error(`Crawl failed for ${this.source.name}: ${error.message}`);
+        // 3. Fall back to HTML scraping
+        if (articleUrls.length === 0) {
+            articleUrls = await this.discoverViaHTML();
+            method = 'html';
+        }
+
+        if (articleUrls.length === 0) {
+            logger.warn(`[${this.source.name}] No article URLs discovered via any method`);
             return articles;
         }
+
+        logger.info(`[${this.source.name}] Discovered ${articleUrls.length} URLs via ${method}`);
+
+        // === Incremental filtering: skip already-seen articles ===
+        const newUrls = await incrementalTracker.filterNewUrls(this.source.id, articleUrls);
+
+        if (newUrls.length === 0) {
+            logger.info(`[${this.source.name}] All articles already seen — skipping extraction`);
+            return articles;
+        }
+
+        logger.info(`[${this.source.name}] ${newUrls.length} new articles to extract (${articleUrls.length - newUrls.length} skipped as seen)`);
+
+        // === Extract full content for new articles ===
+        for (const link of newUrls) {
+            try {
+                logger.info(`[${this.source.name}] Crawling: ${link}`);
+                const article = await this.extractArticle(link);
+                if (article) {
+                    articles.push(article);
+                }
+            } catch (error: any) {
+                logger.warn(`[${this.source.name}] Error crawling ${link}: ${error.message}`);
+            }
+        }
+
+        // Mark all discovered URLs as seen (including ones that failed extraction)
+        await incrementalTracker.markSeen(this.source.id, newUrls);
+
+        logger.info(`[${this.source.name}] Crawled ${articles.length} articles via ${method}`);
+        return articles;
     }
 }

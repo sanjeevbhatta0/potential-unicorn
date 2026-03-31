@@ -450,4 +450,6 @@ Your platform now provides something NO other Nepali news site offers:
 - Objective AI-powered credibility
 - Transparent trust indicators
 
+**OnlineKhaber**: THis is the primary news source that we will be using.
+
 **Ready to make Nepali news consumption better for everyone!** 🚀

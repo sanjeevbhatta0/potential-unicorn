@@ -14,6 +14,7 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { QueryArticleDto } from './dto/query-article.dto';
 import { PaginatedResponse } from '@potential-unicorn/types';
 import { AppSettingsService } from '../app-settings/app-settings.service';
+import { AIProcessingService } from '../ai-settings/ai-processing.service';
 
 // Keyword mappings for category detection (supports both English and Nepali)
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -71,6 +72,7 @@ export class ArticlesService {
     private readonly articleRepository: Repository<ArticleEntity>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly appSettingsService: AppSettingsService,
+    private readonly aiProcessingService: AIProcessingService,
   ) { }
 
   async create(createArticleDto: CreateArticleDto): Promise<ArticleEntity> {
@@ -310,7 +312,7 @@ export class ArticlesService {
   /**
    * Process an article with AI (on-demand for existing articles)
    * If already processed, returns cached data from DB
-   * Otherwise, calls AI service to generate summary and credibility score
+   * Otherwise, calls the configured AI provider directly
    */
   async processArticleWithAI(id: string): Promise<{
     aiSummary: string;
@@ -330,90 +332,32 @@ export class ArticlesService {
       };
     }
 
-    // Call AI service to process article
-    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-
     try {
-      // Call summarize endpoint
-      const summaryResponse = await fetch(`${aiServiceUrl}/api/v1/summarize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          article: {
-            content: article.content?.substring(0, 4000) || article.title,
-            title: article.title,
-          },
-          provider: 'claude',
-          length: 'medium',
-          language: 'ne', // Nepali
-        }),
-      });
+      const result = await this.aiProcessingService.summarizeArticle(
+        article.title,
+        article.content?.substring(0, 4000) || article.title,
+        article.language || 'ne',
+        article.id,
+      );
 
-      if (!summaryResponse.ok) {
-        throw new Error(`AI service error: ${summaryResponse.status}`);
+      // Update article with AI results
+      article.aiSummary = result.summary;
+      article.aiKeyPoints = result.keyPoints;
+      article.credibilityScore = result.credibilityScore;
+      if (result.category && result.category !== 'general') {
+        article.category = result.category as any;
       }
-
-      const summaryData = await summaryResponse.json();
-
-      // Call credibility endpoint
-      const credibilityResponse = await fetch(`${aiServiceUrl}/api/v1/credibility`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          article: {
-            content: article.content?.substring(0, 4000) || article.title,
-            title: article.title,
-            url: article.url,
-          },
-        }),
-      });
-
-      let credibilityScore = 7; // Default score
-      if (credibilityResponse.ok) {
-        const credibilityData = await credibilityResponse.json();
-        credibilityScore = credibilityData.overall_score || 7;
-      }
-
-      // Extract key points from summary response
-      const keyPoints = summaryData.key_points || [];
-
-      // Update category if provided
-      if (summaryData.category) {
-        const aiCategory = summaryData.category.toLowerCase();
-        // Valid categories map
-        const categoryMap: Record<string, any> = {
-          'politics': 'politics',
-          'sports': 'sports',
-          'entertainment': 'entertainment',
-          'business': 'business',
-          'technology': 'technology',
-          'health': 'health',
-          'education': 'education',
-          'international': 'international',
-          'opinion': 'opinion',
-          'general': 'general'
-        };
-
-        if (categoryMap[aiCategory]) {
-          article.category = categoryMap[aiCategory];
-        }
-      }
-
-      // Save to database
-      article.aiSummary = summaryData.summary;
-      article.aiKeyPoints = keyPoints;
-      article.credibilityScore = credibilityScore;
       await this.articleRepository.save(article);
 
       return {
-        aiSummary: summaryData.summary,
-        aiKeyPoints: keyPoints,
-        credibilityScore,
+        aiSummary: result.summary,
+        aiKeyPoints: result.keyPoints,
+        credibilityScore: result.credibilityScore,
         category: article.category,
       };
-    } catch (error) {
-      console.error('AI processing failed:', error);
-      throw new BadRequestException('Failed to process article with AI');
+    } catch (error: any) {
+      console.error('AI processing failed:', error.message);
+      throw new BadRequestException(error.message || 'Failed to process article with AI');
     }
   }
 

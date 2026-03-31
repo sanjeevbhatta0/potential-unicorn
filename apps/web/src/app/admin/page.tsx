@@ -12,6 +12,23 @@ interface AppSettings {
     balancedFeedEnabled: { value: boolean; description?: string };
 }
 
+interface AIUsageStats {
+    totalCalls: number;
+    successfulCalls: number;
+    failedCalls: number;
+    totalEstimatedCost: number;
+    totalEstimatedTokens: number;
+    byProvider: Record<string, { calls: number; cost: number; tokens: number }>;
+    recentCalls: Array<{
+        timestamp: string;
+        provider: string;
+        model: string;
+        estimatedTokens: number;
+        estimatedCost: number;
+        success: boolean;
+    }>;
+}
+
 export default function AdminDashboard() {
     const [stats, setStats] = useState<Stats>({
         totalArticles: 0,
@@ -23,6 +40,7 @@ export default function AdminDashboard() {
         balancedFeedEnabled: { value: false },
     });
     const [settingsLoading, setSettingsLoading] = useState(false);
+    const [aiUsage, setAiUsage] = useState<AIUsageStats | null>(null);
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
 
@@ -54,6 +72,16 @@ export default function AdminDashboard() {
                     if (settingsData.success && settingsData.data) {
                         setAppSettings(settingsData.data);
                     }
+                }
+
+                // Fetch AI Usage Stats
+                const usageRes = await fetch(`${API_URL}/api/v1/ai-settings/usage`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (usageRes.ok) {
+                    const usageRaw = await usageRes.json();
+                    const usageData = usageRaw.data || usageRaw;
+                    setAiUsage(usageData);
                 }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
@@ -155,6 +183,83 @@ export default function AdminDashboard() {
                         </button>
                     </div>
                 </div>
+            </div>
+
+            {/* AI Cost Monitoring */}
+            <div className="mt-12">
+                <h2 className="text-xl font-semibold text-white mb-4">AI Cost Monitor</h2>
+                {aiUsage ? (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                <p className="text-gray-400 text-xs uppercase tracking-wide">Total Calls</p>
+                                <p className="text-2xl font-bold text-white mt-1">{aiUsage.totalCalls}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {aiUsage.successfulCalls} ok / {aiUsage.failedCalls} failed
+                                </p>
+                            </div>
+                            <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                <p className="text-gray-400 text-xs uppercase tracking-wide">Est. Cost</p>
+                                <p className="text-2xl font-bold text-green-400 mt-1">
+                                    ${aiUsage.totalEstimatedCost.toFixed(4)}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">since last cold start</p>
+                            </div>
+                            <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                <p className="text-gray-400 text-xs uppercase tracking-wide">Tokens Used</p>
+                                <p className="text-2xl font-bold text-blue-400 mt-1">
+                                    {aiUsage.totalEstimatedTokens.toLocaleString()}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">estimated</p>
+                            </div>
+                            <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                <p className="text-gray-400 text-xs uppercase tracking-wide">Providers</p>
+                                <div className="mt-1">
+                                    {Object.entries(aiUsage.byProvider).length > 0 ? (
+                                        Object.entries(aiUsage.byProvider).map(([provider, data]) => (
+                                            <div key={provider} className="flex justify-between text-sm">
+                                                <span className="text-white capitalize">{provider}</span>
+                                                <span className="text-gray-400">{data.calls} calls / ${data.cost.toFixed(4)}</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-500 text-sm">No usage yet</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {aiUsage.recentCalls.length > 0 && (
+                            <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                                <div className="px-4 py-3 border-b border-gray-700">
+                                    <h3 className="text-sm font-medium text-white">Recent AI Calls</h3>
+                                </div>
+                                <div className="divide-y divide-gray-700 max-h-64 overflow-y-auto">
+                                    {aiUsage.recentCalls.slice(0, 10).map((call, i) => (
+                                        <div key={i} className="px-4 py-2 flex items-center justify-between text-sm">
+                                            <div className="flex items-center gap-3">
+                                                <span className={`w-2 h-2 rounded-full ${call.success ? 'bg-green-400' : 'bg-red-400'}`} />
+                                                <span className="text-white capitalize">{call.provider}</span>
+                                                <span className="text-gray-500">{call.model}</span>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-gray-400">
+                                                <span>{call.estimatedTokens.toLocaleString()} tokens</span>
+                                                <span>${call.estimatedCost.toFixed(4)}</span>
+                                                <span className="text-xs">
+                                                    {new Date(call.timestamp).toLocaleTimeString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <p className="text-gray-400">No AI usage data available. Configure an AI model and process an article to see stats.</p>
+                    </div>
+                )}
             </div>
 
             <div className="mt-12">

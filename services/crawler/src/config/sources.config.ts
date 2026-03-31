@@ -2,6 +2,10 @@ export interface CrawlerConfig {
   name: string;
   baseUrl: string;
   enabled: boolean;
+  /** Explicit RSS feed URL for this source */
+  rssFeedUrl?: string;
+  /** Explicit sitemap URL for this source */
+  sitemapUrl?: string;
   selectors: {
     articleList: string;
     articleLink: string;
@@ -30,6 +34,7 @@ export const crawlerConfigs: Record<string, CrawlerConfig> = {
   onlinekhabar: {
     name: 'Online Khabar',
     baseUrl: 'https://www.onlinekhabar.com',
+    rssFeedUrl: 'https://www.onlinekhabar.com/feed',
     enabled: true,
     selectors: {
       articleList: 'article.ok-post, .ok-news-post',
@@ -57,6 +62,7 @@ export const crawlerConfigs: Record<string, CrawlerConfig> = {
   ekantipur: {
     name: 'eKantipur',
     baseUrl: 'https://ekantipur.com',
+    rssFeedUrl: 'https://ekantipur.com/rss',
     enabled: true,
     selectors: {
       articleList: '.normal-news, article.card',
@@ -84,6 +90,7 @@ export const crawlerConfigs: Record<string, CrawlerConfig> = {
   setopati: {
     name: 'Setopati',
     baseUrl: 'https://www.setopati.com',
+    rssFeedUrl: 'https://www.setopati.com/feed',
     enabled: true,
     selectors: {
       articleList: '.news-box, article.news-item',

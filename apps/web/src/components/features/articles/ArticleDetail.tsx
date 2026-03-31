@@ -230,7 +230,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
         progressCleanup();
       }
     };
-  }, [article.id, simulateProgress, article.aiSummary, article.credibilityScore, article.category]); // Depend on specific fields, not entire object
+  }, [article.id, simulateProgress, article.summary, article.category]); // Depend on specific fields, not entire object
 
 
   return (

@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AISettingsService } from './ai-settings.service';
+import { AIProcessingService } from './ai-processing.service';
 import { CreateAISettingsDto, UpdateAISettingsDto } from './dto';
 import { AIProvider } from '../database/entities/ai-settings.entity';
 import { AdminGuard, AdminOnly } from '../common/guards/admin.guard';
@@ -24,13 +25,23 @@ import axios from 'axios';
 @AdminOnly()
 @Controller('ai-settings')
 export class AISettingsController {
-    constructor(private readonly aiSettingsService: AISettingsService) { }
+    constructor(
+        private readonly aiSettingsService: AISettingsService,
+        private readonly aiProcessingService: AIProcessingService,
+    ) { }
 
     @Get()
     @ApiOperation({ summary: 'List all AI configurations' })
     @ApiResponse({ status: 200, description: 'List of AI settings' })
     async findAll() {
         return this.aiSettingsService.findAll();
+    }
+
+    @Get('usage')
+    @ApiOperation({ summary: 'Get AI usage statistics and cost estimates' })
+    @ApiResponse({ status: 200, description: 'Usage stats' })
+    getUsage() {
+        return this.aiProcessingService.getUsageStats();
     }
 
     @Get('providers')

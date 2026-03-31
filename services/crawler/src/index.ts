@@ -1,11 +1,17 @@
 import 'dotenv/config';
 import cron from 'node-cron';
+import pLimit from 'p-limit';
 import logger from './utils/logger';
 import { GenericCrawler, Article } from './crawlers/generic.crawler';
 import { fetchSourcesFromAPI, updateLastCrawled, SourceConfig } from './services/source-config.service';
 import articleProcessor from './processors/article.processor';
 import deduplicator from './processors/deduplicator';
 import queueProducer from './queue/producer';
+import incrementalTracker from './discovery/incremental.tracker';
+import { clearRobotsCache } from './discovery/robots.checker';
+
+// Crawl up to 3 sources in parallel (each still rate-limits its own requests)
+const SOURCE_CONCURRENCY = parseInt(process.env.SOURCE_CONCURRENCY || '3');
 
 class CrawlerService {
   private isRunning: boolean = false;
@@ -16,7 +22,64 @@ class CrawlerService {
   }
 
   /**
-   * Run crawl operation for all enabled sources from the database
+   * Crawl a single source: discover → extract → process → dedup → queue.
+   */
+  private async crawlSource(source: SourceConfig): Promise<{
+    name: string;
+    articles: number;
+    processed: number;
+    unique: number;
+    queued: number;
+  }> {
+    const stats = { name: source.name, articles: 0, processed: 0, unique: 0, queued: 0 };
+
+    logger.info(`\n--- Crawling ${source.name} ---`);
+
+    const crawler = new GenericCrawler(source);
+    const articles = await crawler.crawl();
+    stats.articles = articles.length;
+
+    if (articles.length === 0) {
+      logger.warn(`No articles found for ${source.name}`);
+      return stats;
+    }
+
+    // Process articles
+    logger.info(`Processing ${articles.length} articles...`);
+    const adaptedArticles = articles.map(a => ({ ...a, source: source.name }));
+    const processedArticles = articleProcessor.processArticles(adaptedArticles as any);
+    stats.processed = processedArticles.length;
+
+    if (processedArticles.length === 0) {
+      logger.warn(`No valid articles after processing for ${source.name}`);
+      return stats;
+    }
+
+    // Filter duplicates
+    logger.info(`Checking for duplicates...`);
+    const uniqueArticles = await deduplicator.filterDuplicates(processedArticles);
+    stats.unique = uniqueArticles.length;
+
+    if (uniqueArticles.length === 0) {
+      logger.info(`All articles were duplicates for ${source.name}`);
+      return stats;
+    }
+
+    // Add to queue
+    logger.info(`Adding ${uniqueArticles.length} unique articles to queue...`);
+    const jobs = await queueProducer.addArticles(uniqueArticles);
+    stats.queued = jobs.length;
+
+    // Update last crawled timestamp
+    await updateLastCrawled(source.id);
+
+    logger.info(`✓ ${source.name} completed: ${stats.articles} crawled, ${stats.unique} unique, ${stats.queued} queued`);
+    return stats;
+  }
+
+  /**
+   * Run crawl operation for all enabled sources from the database.
+   * Sources are crawled in parallel (up to SOURCE_CONCURRENCY at a time).
    */
   async runCrawl(): Promise<void> {
     if (this.isRunning) {
@@ -29,10 +92,10 @@ class CrawlerService {
 
     logger.info('========================================');
     logger.info('Starting crawl operation...');
+    logger.info(`Source concurrency: ${SOURCE_CONCURRENCY}`);
     logger.info('========================================');
 
     try {
-      // Fetch sources from the API
       const sources = await fetchSourcesFromAPI();
 
       if (sources.length === 0) {
@@ -42,69 +105,41 @@ class CrawlerService {
 
       logger.info(`Found ${sources.length} active sources to crawl`);
 
+      // Clear robots.txt cache at the start of each crawl cycle
+      clearRobotsCache();
+
+      // Crawl sources in parallel with concurrency limit
+      const limit = pLimit(SOURCE_CONCURRENCY);
+      const results = await Promise.allSettled(
+        sources.map(source =>
+          limit(async () => {
+            try {
+              return await this.crawlSource(source);
+            } catch (error: any) {
+              logger.error(`Error crawling ${source.name}: ${error.message}`, {
+                stack: error.stack,
+              });
+              return { name: source.name, articles: 0, processed: 0, unique: 0, queued: 0 };
+            }
+          })
+        )
+      );
+
+      // Aggregate stats
       let totalArticles = 0;
       let totalProcessed = 0;
       let totalUnique = 0;
       let totalQueued = 0;
 
-      // Run crawlers sequentially to avoid overwhelming the sources
-      for (const source of sources) {
-        try {
-          logger.info(`\n--- Crawling ${source.name} ---`);
-
-          // Create crawler for this source
-          const crawler = new GenericCrawler(source);
-
-          // Crawl articles
-          const articles = await crawler.crawl();
-          totalArticles += articles.length;
-
-          if (articles.length === 0) {
-            logger.warn(`No articles found for ${source.name}`);
-            continue;
-          }
-
-          // Process articles - adapt to existing processor interface
-          logger.info(`Processing ${articles.length} articles...`);
-          const adaptedArticles = articles.map(a => ({
-            ...a,
-            source: source.name,
-          }));
-          const processedArticles = articleProcessor.processArticles(adaptedArticles as any);
-          totalProcessed += processedArticles.length;
-
-          if (processedArticles.length === 0) {
-            logger.warn(`No valid articles after processing for ${source.name}`);
-            continue;
-          }
-
-          // Filter duplicates
-          logger.info(`Checking for duplicates...`);
-          const uniqueArticles = await deduplicator.filterDuplicates(processedArticles);
-          totalUnique += uniqueArticles.length;
-
-          if (uniqueArticles.length === 0) {
-            logger.info(`All articles were duplicates for ${source.name}`);
-            continue;
-          }
-
-          // Add to queue
-          logger.info(`Adding ${uniqueArticles.length} unique articles to queue...`);
-          const jobs = await queueProducer.addArticles(uniqueArticles);
-          totalQueued += jobs.length;
-
-          // Update last crawled timestamp
-          await updateLastCrawled(source.id);
-
-          logger.info(`✓ ${source.name} completed: ${articles.length} crawled, ${uniqueArticles.length} unique, ${jobs.length} queued`);
-        } catch (error: any) {
-          logger.error(`Error crawling ${source.name}: ${error.message}`, {
-            stack: error.stack,
-          });
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          totalArticles += result.value.articles;
+          totalProcessed += result.value.processed;
+          totalUnique += result.value.unique;
+          totalQueued += result.value.queued;
         }
       }
 
-      // Log summary
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       logger.info('\n========================================');
       logger.info('Crawl operation completed');
@@ -119,10 +154,7 @@ class CrawlerService {
         duplicates: totalProcessed - totalUnique,
       });
 
-      // Log queue statistics
       await queueProducer.logStats();
-
-      // Clean old jobs from queue
       await queueProducer.cleanQueue();
     } catch (error: any) {
       logger.error('Crawl operation failed:', {
@@ -196,6 +228,9 @@ class CrawlerService {
     // Close deduplicator redis connection
     await deduplicator.close();
 
+    // Close incremental tracker redis connection
+    await incrementalTracker.close();
+
     logger.info('Crawler service shut down complete');
   }
 }
@@ -223,6 +258,7 @@ async function main(): Promise<void> {
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`Log Level: ${process.env.LOG_LEVEL || 'info'}`);
   logger.info(`Crawl Interval: ${process.env.CRAWL_INTERVAL || '*/30 * * * *'}`);
+  logger.info(`Source Concurrency: ${SOURCE_CONCURRENCY}`);
   logger.info(`API URL: ${process.env.API_URL || 'http://localhost:3333'}`);
   logger.info('========================================');
 

@@ -12,6 +12,10 @@ export interface SourceConfig {
         enabled: boolean;
         interval?: number;
         maxArticles?: number;
+        /** Explicit RSS feed URL. If omitted, auto-discovery is attempted. */
+        rssFeedUrl?: string;
+        /** Explicit sitemap URL. If omitted, auto-discovery is attempted. */
+        sitemapUrl?: string;
         selectors?: {
             article?: string;
             title?: string;
