@@ -179,7 +179,9 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
           throw new Error('AI service temporarily unavailable');
         }
 
-        const data = await response.json();
+        const responseJson = await response.json();
+        // API wraps response in { success, data: { ... } }
+        const data = responseJson.data || responseJson;
 
         if (isMounted) {
           // Update all state at once
