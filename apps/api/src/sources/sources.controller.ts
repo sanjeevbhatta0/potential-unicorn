@@ -75,6 +75,18 @@ export class SourcesController {
     return this.sourcesService.findByLanguage(language);
   }
 
+  @Get('cron-crawl')
+  @Public()
+  @ApiOperation({ summary: 'Cron endpoint to crawl all active sources' })
+  @ApiResponse({ status: 200, description: 'Crawl results returned' })
+  cronCrawl(@Headers('authorization') authHeader: string) {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      throw new UnauthorizedException('Invalid CRON_SECRET');
+    }
+    return this.crawlerService.crawlAll();
+  }
+
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Get source by ID' })
@@ -93,18 +105,6 @@ export class SourcesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   update(@Param('id') id: string, @Body() updateSourceDto: UpdateSourceDto) {
     return this.sourcesService.update(id, updateSourceDto);
-  }
-
-  @Get('cron-crawl')
-  @Public()
-  @ApiOperation({ summary: 'Cron endpoint to crawl all active sources' })
-  @ApiResponse({ status: 200, description: 'Crawl results returned' })
-  cronCrawl(@Headers('authorization') authHeader: string) {
-    const cronSecret = process.env.CRON_SECRET;
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      throw new UnauthorizedException('Invalid CRON_SECRET');
-    }
-    return this.crawlerService.crawlAll();
   }
 
   @Post('crawl-all')
@@ -132,6 +132,27 @@ export class SourcesController {
     if (apiKey !== validApiKey) {
       throw new UnauthorizedException('Invalid API key');
     }
+    return this.crawlerService.crawlSource(id);
+  }
+
+  @Post('admin/crawl-all')
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Admin: Crawl all active sources' })
+  @ApiResponse({ status: 200, description: 'Crawl results returned' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  adminCrawlAll() {
+    return this.crawlerService.crawlAll();
+  }
+
+  @Post(':id/admin-crawl')
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Admin: Crawl a specific source' })
+  @ApiResponse({ status: 200, description: 'Crawl result returned' })
+  @ApiResponse({ status: 404, description: 'Source not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  adminCrawlSource(@Param('id') id: string) {
     return this.crawlerService.crawlSource(id);
   }
 

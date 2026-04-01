@@ -116,6 +116,15 @@ export class ArticlesController {
     return this.articlesService.processArticleWithAI(id);
   }
 
+  @Post('reprocess-seo')
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Batch re-process articles to generate SEO fields' })
+  @ApiResponse({ status: 200, description: 'SEO reprocessing results' })
+  reprocessSeo(@Query('limit') limit?: number) {
+    return this.articlesService.reprocessArticlesForSeo(limit || 20);
+  }
+
   @Post('recategorize/general')
   @Roles('admin')
   @ApiBearerAuth('JWT-auth')

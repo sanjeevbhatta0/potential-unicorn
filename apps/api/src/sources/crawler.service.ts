@@ -7,7 +7,7 @@ import { NewsSourceEntity } from '../database/entities/source.entity';
 import { ArticleEntity } from '../database/entities/article.entity';
 import { SourcesService } from './sources.service';
 
-interface CrawlResult {
+export interface CrawlResult {
   sourceId: string;
   sourceName: string;
   articlesFound: number;
@@ -77,7 +77,7 @@ export class CrawlerService {
     const maxArticles = source.crawlConfig.maxArticles || 10;
     const userAgent =
       source.crawlConfig.userAgent ||
-      'NewsChautari/1.0 (news aggregator)';
+      'NewsChautari.ai/1.0 (news aggregator)';
 
     try {
       // Fetch the source homepage/listing page

@@ -1,4 +1,4 @@
-// Core domain types for NewsChautari
+// Core domain types for NewsChautari.ai
 
 export * from './article';
 export * from './user';

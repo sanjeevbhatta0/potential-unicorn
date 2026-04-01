@@ -33,6 +33,8 @@ export default function CrawlersPage() {
     const [updating, setUpdating] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [editingSource, setEditingSource] = useState<Source | null>(null);
+    const [crawling, setCrawling] = useState<string | null>(null);
+    const [crawlResult, setCrawlResult] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -206,6 +208,57 @@ export default function CrawlersPage() {
         }
     }
 
+    async function crawlAll() {
+        setCrawling('all');
+        setCrawlResult(null);
+        try {
+            const res = await fetch(`${API_URL}/api/v1/sources/admin/crawl-all`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+            });
+            if (res.ok) {
+                const rawData = await res.json();
+                const results = rawData.data || rawData;
+                const total = Array.isArray(results)
+                    ? results.reduce((sum: number, r: any) => sum + (r.articlesCreated || 0), 0)
+                    : 0;
+                setCrawlResult(`Crawl complete: ${total} new articles created`);
+                fetchSources();
+            } else {
+                setCrawlResult('Crawl failed. Check console for details.');
+            }
+        } catch (error) {
+            console.error('Crawl failed:', error);
+            setCrawlResult('Crawl failed. Check console for details.');
+        } finally {
+            setCrawling(null);
+        }
+    }
+
+    async function crawlSource(source: Source) {
+        setCrawling(source.id);
+        setCrawlResult(null);
+        try {
+            const res = await fetch(`${API_URL}/api/v1/sources/${source.id}/admin-crawl`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+            });
+            if (res.ok) {
+                const rawData = await res.json();
+                const result = rawData.data || rawData;
+                setCrawlResult(`${source.name}: ${result.articlesCreated || 0} new articles, ${result.duplicates || 0} duplicates`);
+                fetchSources();
+            } else {
+                setCrawlResult(`Failed to crawl ${source.name}`);
+            }
+        } catch (error) {
+            console.error('Crawl failed:', error);
+            setCrawlResult(`Failed to crawl ${source.name}`);
+        } finally {
+            setCrawling(null);
+        }
+    }
+
     function resetForm() {
         setFormData({
             name: '',
@@ -272,13 +325,41 @@ export default function CrawlersPage() {
                     <h1 className="text-3xl font-bold text-white">Crawler Sources</h1>
                     <p className="text-gray-400 mt-1">Manage news sources and crawling settings</p>
                 </div>
-                <button
-                    onClick={() => { resetForm(); setEditingSource(null); setShowModal(true); }}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
-                >
-                    <span>+</span> Add Source
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={crawlAll}
+                        disabled={crawling !== null}
+                        className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:opacity-50 text-white rounded-lg flex items-center gap-2 transition-colors"
+                    >
+                        {crawling === 'all' ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Crawling...
+                            </>
+                        ) : (
+                            <>🔄 Crawl All Now</>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => { resetForm(); setEditingSource(null); setShowModal(true); }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+                    >
+                        <span>+</span> Add Source
+                    </button>
+                </div>
             </div>
+
+            {crawlResult && (
+                <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center justify-between">
+                    <span className="text-green-400 text-sm">{crawlResult}</span>
+                    <button
+                        onClick={() => setCrawlResult(null)}
+                        className="text-green-400 hover:text-green-300 text-sm"
+                    >
+                        Dismiss
+                    </button>
+                </div>
+            )}
 
             {loading ? (
                 <div className="grid gap-4">
@@ -360,6 +441,19 @@ export default function CrawlersPage() {
                                             ) : (
                                                 '▶️ Resume'
                                             )}
+                                        </button>
+
+                                        <button
+                                            onClick={() => crawlSource(source)}
+                                            disabled={crawling !== null || !source.isActive}
+                                            className="px-3 py-1.5 text-sm bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                                        >
+                                            {crawling === source.id ? (
+                                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                                            ) : (
+                                                '🔄'
+                                            )}
+                                            {crawling === source.id ? 'Crawling...' : 'Crawl'}
                                         </button>
 
                                         <button

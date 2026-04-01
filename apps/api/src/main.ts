@@ -39,8 +39,8 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('NewsChautari API')
-    .setDescription('API documentation for NewsChautari - A comprehensive news aggregation platform')
+    .setTitle('NewsChautari.ai API')
+    .setDescription('API documentation for NewsChautari.ai - AI-powered news aggregation platform')
     .setVersion('1.0')
     .addTag('articles', 'Article management endpoints')
     .addTag('sources', 'News source management endpoints')
@@ -65,7 +65,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  console.log(`\n🚀 NewsChautari API is running on: http://localhost:${port}`);
+  console.log(`\n🚀 NewsChautari.ai API is running on: http://localhost:${port}`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs\n`);
 }
 

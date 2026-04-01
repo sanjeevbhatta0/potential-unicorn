@@ -102,11 +102,11 @@ export function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3 group">
           <div className="relative h-9 w-9 overflow-hidden rounded-md transition-transform group-hover:scale-105">
-            <img src="/logo.png" alt="NewsChautari" className="h-full w-full object-cover" />
+            <img src="/logo.png" alt="NewsChautari.ai" className="h-full w-full object-cover" />
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-serif font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
-              NewsChautari
+              NewsChautari<span className="text-primary">.ai</span>
             </span>
             <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase leading-none">
               Smart. Short. Simple.

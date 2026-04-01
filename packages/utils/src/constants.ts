@@ -1,6 +1,6 @@
 // Application constants
 
-export const APP_NAME = 'NewsChautari';
+export const APP_NAME = 'NewsChautari.ai';
 export const APP_DESCRIPTION = 'AI-powered news aggregator for Nepali news';
 
 // Pagination

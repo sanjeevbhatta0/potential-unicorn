@@ -102,6 +102,15 @@ export class ArticleEntity {
   @Column({ name: 'credibility_score', type: 'int', nullable: true })
   credibilityScore: number;
 
+  @Column({ name: 'seo_title', type: 'text', nullable: true })
+  seoTitle: string;
+
+  @Column({ name: 'seo_description', type: 'text', nullable: true })
+  seoDescription: string;
+
+  @Column('simple-array', { name: 'seo_keywords', nullable: true })
+  seoKeywords: string[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

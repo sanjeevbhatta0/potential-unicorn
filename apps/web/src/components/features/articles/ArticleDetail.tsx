@@ -169,7 +169,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
       }
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api/v1';
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'}/api/v1`;
         const response = await fetch(`${apiUrl}/articles/${article.id}/process-ai`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

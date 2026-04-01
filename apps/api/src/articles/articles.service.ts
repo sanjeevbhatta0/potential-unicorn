@@ -7,7 +7,7 @@ import {
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, Like, Between, Not, In } from 'typeorm';
+import { Repository, FindOptionsWhere, Like, Between, Not, In, IsNull } from 'typeorm';
 import { ArticleEntity } from '../database/entities/article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -340,10 +340,19 @@ export class ArticlesService {
         article.id,
       );
 
-      // Update article with AI results
+      // Update article with AI results including SEO fields
       article.aiSummary = result.summary;
       article.aiKeyPoints = result.keyPoints;
       article.credibilityScore = result.credibilityScore;
+      article.seoTitle = result.seoTitle || '';
+      article.seoDescription = result.seoDescription || '';
+      article.seoKeywords = result.seoKeywords || [];
+      // Merge SEO keywords into tags for better discoverability
+      if (result.seoKeywords?.length) {
+        const existingTags = article.tags || [];
+        const merged = [...new Set([...existingTags, ...result.seoKeywords])];
+        article.tags = merged.slice(0, 15);
+      }
       if (result.category && result.category !== 'general') {
         article.category = result.category as any;
       }
@@ -359,6 +368,49 @@ export class ArticlesService {
       console.error('AI processing failed:', error.message);
       throw new BadRequestException(error.message || 'Failed to process article with AI');
     }
+  }
+
+  /**
+   * Batch re-process articles that are missing SEO fields.
+   * Clears existing aiSummary to force re-generation with new SEO-enhanced prompt.
+   */
+  async reprocessArticlesForSeo(limit: number = 20): Promise<{
+    processed: number;
+    succeeded: number;
+    failed: number;
+    results: Array<{ id: string; title: string; status: string }>;
+  }> {
+    // Find articles missing seoTitle (i.e., not yet processed with the new prompt)
+    const articles = await this.articleRepository.find({
+      where: [
+        { seoTitle: IsNull() },
+        { seoTitle: '' },
+      ],
+      order: { publishedAt: 'DESC' },
+      take: limit,
+    });
+
+    const results: Array<{ id: string; title: string; status: string }> = [];
+    let succeeded = 0;
+    let failed = 0;
+
+    for (const article of articles) {
+      try {
+        // Clear aiSummary to force re-processing
+        article.aiSummary = null as any;
+        await this.articleRepository.save(article);
+
+        // Re-process with AI (which now generates SEO fields)
+        await this.processArticleWithAI(article.id);
+        succeeded++;
+        results.push({ id: article.id, title: article.title.substring(0, 60), status: 'ok' });
+      } catch (error: any) {
+        failed++;
+        results.push({ id: article.id, title: article.title.substring(0, 60), status: error.message });
+      }
+    }
+
+    return { processed: articles.length, succeeded, failed, results };
   }
 
   /**

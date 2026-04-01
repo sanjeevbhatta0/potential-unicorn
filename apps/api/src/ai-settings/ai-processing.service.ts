@@ -9,6 +9,9 @@ export interface AISummaryResult {
   keyPoints: string[];
   category: string;
   credibilityScore: number;
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string[];
   provider: string;
   model: string;
   estimatedTokens: number;
@@ -66,7 +69,7 @@ export class AIProcessingService {
     const costPer1k = modelInfo?.costPer1kTokens || 0.001;
     const estimatedCost = (estimatedTokens / 1000) * costPer1k;
 
-    let result: { summary: string; keyPoints: string[]; category: string; credibilityScore: number };
+    let result: { summary: string; keyPoints: string[]; category: string; credibilityScore: number; seoTitle: string; seoDescription: string; seoKeywords: string[] };
 
     try {
       switch (defaultProvider.provider) {
@@ -159,20 +162,32 @@ export class AIProcessingService {
 
   private buildPrompt(title: string, content: string, language: string): string {
     const langText = language === 'ne' ? 'Nepali' : 'English';
-    return `You are an expert content summarizer and classifier.
+    return `You are an expert SEO content analyst and news summarizer.
 
-Your task is to:
-1. Create a clear, concise summary of approximately 100-150 words in ${langText}
-2. Extract 3-5 key points
-3. Classify the article into ONE of these categories: Politics, Sports, Entertainment, Business, Technology, Health, Education, International, Opinion, General
-4. Provide a credibility score from 1-10 based on the content quality
+Analyze this news article and produce SEO-optimized metadata. Your output will be used for search engine indexing, social sharing, and AI/LLM discovery.
+
+Tasks:
+1. **summary**: Clear, informative summary (100-150 words) in ${langText}. Write it so both humans and AI models understand the key facts. Include who, what, when, where, why.
+2. **keyPoints**: 3-5 key takeaways as complete sentences (not fragments). Each should be independently meaningful for AI citation.
+3. **category**: Classify into ONE: Politics, Sports, Entertainment, Business, Technology, Health, Education, International, Opinion, General
+4. **credibilityScore**: 1-10 based on source quality, factual claims, and attribution
+5. **seoTitle**: An engaging, click-worthy headline (50-60 characters) in ${langText}. Include the primary topic and a relevant keyword. Do NOT just copy the original title.
+6. **seoDescription**: Meta description (140-155 characters) in ${langText}. Summarize the article's value proposition. Include primary keyword naturally. Write it to maximize click-through from search results.
+7. **seoKeywords**: 6-10 SEO keywords/phrases relevant to this article. Include a mix of:
+   - Primary topic keywords (e.g., "Nepal politics", "cricket world cup")
+   - Named entities (people, organizations, places mentioned)
+   - Long-tail search phrases users might search for
+   - Both ${langText} and English keywords if the article is in ${langText}
 
 IMPORTANT: Respond in this exact JSON format:
 {
   "summary": "your summary here",
   "keyPoints": ["point 1", "point 2", "point 3"],
   "category": "category name",
-  "credibilityScore": 7
+  "credibilityScore": 7,
+  "seoTitle": "optimized title here",
+  "seoDescription": "meta description here",
+  "seoKeywords": ["keyword1", "keyword2", "keyword3"]
 }
 
 Article Title: ${title}
@@ -247,6 +262,9 @@ ${content}`;
           keyPoints: parsed.keyPoints || [],
           category: this.normalizeCategory(parsed.category),
           credibilityScore: parsed.credibilityScore || 7,
+          seoTitle: parsed.seoTitle || '',
+          seoDescription: parsed.seoDescription || '',
+          seoKeywords: parsed.seoKeywords || [],
         };
       }
     } catch (e) { }
@@ -256,6 +274,9 @@ ${content}`;
       keyPoints: [],
       category: 'general',
       credibilityScore: 7,
+      seoTitle: '',
+      seoDescription: '',
+      seoKeywords: [],
     };
   }
 
