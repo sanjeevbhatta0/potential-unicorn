@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Settings, Newspaper, Building2, LayoutDashboard, ArrowLeft, Sun, Moon } from 'lucide-react';
+import { Settings, Newspaper, Building2, LayoutDashboard, ArrowLeft, Sun, Moon, Menu, X } from 'lucide-react';
 import { useTheme } from '@/app/providers';
 import { Button } from '@/components/ui/button';
 
@@ -17,12 +17,18 @@ export default function DashboardLayout({
     const pathname = usePathname();
     const { user, isLoading, isAuthenticated } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
             router.push('/');
         }
     }, [isAuthenticated, isLoading, router]);
+
+    // Close sidebar on route change
+    useEffect(() => {
+        setSidebarOpen(false);
+    }, [pathname]);
 
     if (isLoading) {
         return (
@@ -43,12 +49,39 @@ export default function DashboardLayout({
         { href: '/dashboard/business', label: 'Business Registration', icon: Building2 },
     ];
 
-
-
     return (
         <div className="min-h-screen bg-background flex">
+            {/* Mobile header */}
+            <div className="fixed top-0 left-0 right-0 z-40 bg-card border-b border-border flex items-center justify-between px-4 py-3 lg:hidden">
+                <button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="text-foreground p-1"
+                    aria-label="Toggle menu"
+                >
+                    {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
+                <h1 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    <LayoutDashboard className="w-4 h-4 text-primary" />
+                    My Account
+                </h1>
+                <div className="w-6" />
+            </div>
+
+            {/* Overlay for mobile */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-64 bg-card border-r border-border flex flex-col">
+            <aside className={`
+                fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border flex flex-col
+                transform transition-transform duration-200 ease-in-out
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                lg:translate-x-0 lg:static lg:z-auto
+            `}>
                 <div className="p-6 border-b border-border flex items-center justify-between">
                     <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
                         <LayoutDashboard className="w-6 h-6 text-primary" />
@@ -80,7 +113,7 @@ export default function DashboardLayout({
                     {/* User Info */}
                     <div>
                         <div className="flex items-center gap-3 px-2 py-2 mb-2">
-                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium text-sm">
+                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium text-sm flex-shrink-0">
                                 {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -123,7 +156,7 @@ export default function DashboardLayout({
             </aside>
 
             {/* Main content */}
-            <main className="flex-1 p-8 overflow-auto">
+            <main className="flex-1 min-w-0 p-4 pt-16 lg:p-8 lg:pt-8 overflow-auto">
                 <div className="max-w-5xl mx-auto">
                     {children}
                 </div>

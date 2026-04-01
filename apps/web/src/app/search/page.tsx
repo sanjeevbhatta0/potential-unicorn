@@ -57,7 +57,7 @@ export default function SearchPage() {
                 <p className="text-sm text-muted-foreground">
                   {isLoading
                     ? 'Searching...'
-                    : `Found ${searchResults?.total || 0} results for "${activeQuery}"`}
+                    : `Found ${searchResults?.pagination?.total || 0} results for "${activeQuery}"`}
                 </p>
               </div>
             )}

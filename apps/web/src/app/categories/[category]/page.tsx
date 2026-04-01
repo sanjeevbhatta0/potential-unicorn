@@ -41,7 +41,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
             <div className="flex items-center justify-between mb-6">
               <div className="text-sm text-muted-foreground">
-                {articlesData?.total || 0} articles found
+                {articlesData?.pagination?.total || 0} articles found
               </div>
               <div className="flex gap-2">
                 <Button
@@ -57,7 +57,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                   size="sm"
                   disabled={
                     !articlesData ||
-                    page >= articlesData.totalPages
+                    page >= (articlesData.pagination?.totalPages || 1)
                   }
                   onClick={() => setPage((p) => p + 1)}
                 >
@@ -73,9 +73,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
             />
 
             {/* Pagination Info */}
-            {articlesData && articlesData.totalPages > 1 && (
+            {articlesData && (articlesData.pagination?.totalPages || 0) > 1 && (
               <div className="mt-8 text-center text-sm text-muted-foreground">
-                Page {page} of {articlesData.totalPages}
+                Page {page} of {articlesData.pagination?.totalPages}
               </div>
             )}
           </section>

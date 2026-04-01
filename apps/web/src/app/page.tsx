@@ -96,7 +96,7 @@ export default function HomePage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!articlesData || page >= articlesData.totalPages}
+                disabled={!articlesData || page >= (articlesData.pagination?.totalPages || 1)}
                 onClick={() => setPage((p) => p + 1)}
               >
                 Next
@@ -115,9 +115,9 @@ export default function HomePage() {
             <div className="mt-10 pt-6 border-t border-border text-center">
               <span className="text-sm text-muted-foreground">
                 Page <span className="font-bold text-foreground">{page}</span> of{' '}
-                <span className="font-bold text-foreground">{articlesData.totalPages}</span>
+                <span className="font-bold text-foreground">{articlesData.pagination?.totalPages}</span>
                 {' | '}
-                <span className="font-bold text-primary">{articlesData.total}</span> articles
+                <span className="font-bold text-primary">{articlesData.pagination?.total}</span> articles
               </span>
             </div>
           )}

@@ -4,10 +4,13 @@ import { api } from '../api/client';
 
 interface ArticlesResponse {
   data: Article[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
 }
 
 // Query keys

@@ -34,10 +34,13 @@ apiClient.interceptors.response.use(
       // Handle specific error codes
       switch (error.response.status) {
         case 401:
-          // Unauthorized - clear auth and redirect to login
+          // Unauthorized - clear auth and redirect to home (sign-in is a dialog)
           if (typeof window !== 'undefined') {
             localStorage.removeItem('auth_token');
-            window.location.href = '/login';
+            // Only redirect if on a protected page, not during initial auth check
+            if (window.location.pathname.startsWith('/dashboard')) {
+              window.location.href = '/';
+            }
           }
           break;
         case 403:
