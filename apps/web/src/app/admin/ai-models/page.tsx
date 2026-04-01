@@ -226,14 +226,14 @@ export default function AIModelsPage() {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">AI Models</h1>
-                    <p className="text-gray-400 mt-1">Configure AI providers and manage API keys</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white">AI Models</h1>
+                    <p className="text-gray-400 mt-1 text-sm">Configure AI providers and manage API keys</p>
                 </div>
                 <button
                     onClick={() => { resetForm(); setEditingModel(null); setShowModal(true); }}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors text-sm sm:text-base self-start sm:self-auto"
                 >
                     <span>+</span> Add Model
                 </button>
@@ -265,15 +265,15 @@ export default function AIModelsPage() {
                     {models.map((model) => (
                         <div
                             key={model.id}
-                            className={`bg-gray-800 rounded-xl p-6 border ${model.isDefault ? 'border-blue-500' : 'border-gray-700'
+                            className={`bg-gray-800 rounded-xl p-4 sm:p-6 border ${model.isDefault ? 'border-blue-500' : 'border-gray-700'
                                 } hover:border-gray-600 transition-colors`}
                         >
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-3xl">{providerIcons[model.provider] || '🤖'}</span>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="text-lg font-semibold text-white">{model.name}</h3>
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                    <span className="text-2xl sm:text-3xl">{providerIcons[model.provider] || '🤖'}</span>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <h3 className="text-base sm:text-lg font-semibold text-white">{model.name}</h3>
                                             {model.isDefault && (
                                                 <span className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full">
                                                     Default
@@ -285,14 +285,14 @@ export default function AIModelsPage() {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-gray-400 text-sm">
+                                        <p className="text-gray-400 text-sm truncate">
                                             {model.provider.charAt(0).toUpperCase() + model.provider.slice(1)} • {model.modelId}
                                         </p>
-                                        <p className="text-gray-500 text-xs mt-1">API Key: {model.apiKey}</p>
+                                        <p className="text-gray-500 text-xs mt-1 truncate">API Key: {model.apiKey}</p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                     {model.lastTestedAt && (
                                         <span className={`text-xs px-2 py-1 rounded ${model.lastTestSuccess
                                             ? 'bg-green-500/20 text-green-400'
@@ -305,7 +305,7 @@ export default function AIModelsPage() {
                                     <button
                                         onClick={() => handleTest(model.id)}
                                         disabled={testingId === model.id}
-                                        className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-700 text-white rounded-lg transition-colors flex items-center gap-1"
+                                        className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-700 text-white rounded-lg transition-colors flex items-center gap-1"
                                     >
                                         {testingId === model.id ? (
                                             <>
@@ -320,15 +320,15 @@ export default function AIModelsPage() {
                                     {!model.isDefault && (
                                         <button
                                             onClick={() => handleSetDefault(model.id)}
-                                            className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                                            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
                                         >
-                                            ⭐ Set Default
+                                            ⭐ Default
                                         </button>
                                     )}
 
                                     <button
                                         onClick={() => openEditModal(model)}
-                                        className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                                        className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
                                     >
                                         ✏️ Edit
                                     </button>
@@ -336,7 +336,7 @@ export default function AIModelsPage() {
                                     {!model.isDefault && (
                                         <button
                                             onClick={() => handleDelete(model.id)}
-                                            className="px-3 py-1.5 text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg transition-colors"
+                                            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg transition-colors"
                                         >
                                             🗑️
                                         </button>
@@ -359,8 +359,8 @@ export default function AIModelsPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-xl p-6 w-full max-w-lg border border-gray-700">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-auto">
+                    <div className="bg-gray-800 rounded-xl p-4 sm:p-6 w-full max-w-lg border border-gray-700 my-8 mx-2 sm:mx-auto">
                         <h2 className="text-xl font-bold text-white mb-6">
                             {editingModel ? 'Edit AI Model' : 'Add AI Model'}
                         </h2>

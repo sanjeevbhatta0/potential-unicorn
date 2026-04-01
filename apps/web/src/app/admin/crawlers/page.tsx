@@ -320,16 +320,16 @@ export default function CrawlersPage() {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Crawler Sources</h1>
-                    <p className="text-gray-400 mt-1">Manage news sources and crawling settings</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white">Crawler Sources</h1>
+                    <p className="text-gray-400 mt-1 text-sm">Manage news sources and crawling settings</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                     <button
                         onClick={crawlAll}
                         disabled={crawling !== null}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:opacity-50 text-white rounded-lg flex items-center gap-2 transition-colors"
+                        className="px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:opacity-50 text-white rounded-lg flex items-center gap-2 transition-colors text-sm sm:text-base"
                     >
                         {crawling === 'all' ? (
                             <>
@@ -337,12 +337,12 @@ export default function CrawlersPage() {
                                 Crawling...
                             </>
                         ) : (
-                            <>🔄 Crawl All Now</>
+                            <>🔄 Crawl All</>
                         )}
                     </button>
                     <button
                         onClick={() => { resetForm(); setEditingSource(null); setShowModal(true); }}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+                        className="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors text-sm sm:text-base"
                     >
                         <span>+</span> Add Source
                     </button>
@@ -391,15 +391,15 @@ export default function CrawlersPage() {
                         return (
                             <div
                                 key={source.id}
-                                className={`bg-gray-800 rounded-xl p-6 border ${source.isActive && isEnabled ? 'border-green-500/30' : 'border-gray-700'
+                                className={`bg-gray-800 rounded-xl p-4 sm:p-6 border ${source.isActive && isEnabled ? 'border-green-500/30' : 'border-gray-700'
                                     } transition-colors`}
                             >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-3xl">{sourceIcons[source.name] || '📄'}</span>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-lg font-semibold text-white">{source.name}</h3>
+                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                    <div className="flex items-center gap-3 sm:gap-4">
+                                        <span className="text-2xl sm:text-3xl">{sourceIcons[source.name] || '📄'}</span>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <h3 className="text-base sm:text-lg font-semibold text-white">{source.name}</h3>
                                                 {!source.isActive && (
                                                     <span className="px-2 py-0.5 text-xs bg-red-500/20 text-red-400 rounded-full">
                                                         Inactive
@@ -416,7 +416,7 @@ export default function CrawlersPage() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-gray-400 text-sm mt-1">
+                                            <p className="text-gray-400 text-sm mt-1 truncate">
                                                 {source.baseUrl ? new URL(source.baseUrl).hostname : source.type}
                                             </p>
                                             <p className="text-gray-500 text-xs mt-1">
@@ -425,11 +425,11 @@ export default function CrawlersPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                         <button
                                             onClick={() => toggleCrawling(source)}
                                             disabled={isUpdating || !source.isActive}
-                                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${isEnabled
+                                            className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors flex items-center gap-1 ${isEnabled
                                                 ? 'bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-400'
                                                 : 'bg-green-600/20 hover:bg-green-600/40 text-green-400'
                                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -446,7 +446,7 @@ export default function CrawlersPage() {
                                         <button
                                             onClick={() => crawlSource(source)}
                                             disabled={crawling !== null || !source.isActive}
-                                            className="px-3 py-1.5 text-sm bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                                            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                                         >
                                             {crawling === source.id ? (
                                                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
@@ -458,7 +458,7 @@ export default function CrawlersPage() {
 
                                         <button
                                             onClick={() => openEditModal(source)}
-                                            className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                                            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
                                         >
                                             ✏️ Edit
                                         </button>
@@ -466,7 +466,7 @@ export default function CrawlersPage() {
                                         <button
                                             onClick={() => toggleSourceActive(source)}
                                             disabled={isUpdating}
-                                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${source.isActive
+                                            className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${source.isActive
                                                 ? 'bg-red-600/20 hover:bg-red-600/40 text-red-400'
                                                 : 'bg-green-600/20 hover:bg-green-600/40 text-green-400'
                                                 } disabled:opacity-50`}
@@ -477,7 +477,7 @@ export default function CrawlersPage() {
                                         <button
                                             onClick={() => handleDelete(source.id)}
                                             disabled={isUpdating}
-                                            className="px-3 py-1.5 text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg transition-colors disabled:opacity-50"
+                                            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg transition-colors disabled:opacity-50"
                                         >
                                             🗑️
                                         </button>
@@ -485,7 +485,7 @@ export default function CrawlersPage() {
                                 </div>
 
                                 {source.crawlConfig && (
-                                    <div className="mt-4 pt-4 border-t border-gray-700 grid grid-cols-4 gap-4">
+                                    <div className="mt-4 pt-4 border-t border-gray-700 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                                         <div>
                                             <p className="text-gray-500 text-xs">Crawl Interval</p>
                                             <p className="text-gray-300 text-sm">{source.crawlConfig.interval || 30} min</p>
@@ -513,13 +513,13 @@ export default function CrawlersPage() {
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-auto">
-                    <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl border border-gray-700 my-8">
+                    <div className="bg-gray-800 rounded-xl p-4 sm:p-6 w-full max-w-2xl border border-gray-700 my-8 mx-2 sm:mx-auto">
                         <h2 className="text-xl font-bold text-white mb-6">
                             {editingSource ? 'Edit Source' : 'Add New Source'}
                         </h2>
 
                         <form onSubmit={handleSubmit}>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">Source Name *</label>
                                     <input
@@ -544,7 +544,7 @@ export default function CrawlersPage() {
                                     </select>
                                 </div>
 
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                     <label className="block text-sm font-medium text-gray-300 mb-2">Base URL *</label>
                                     <input
                                         type="url"
@@ -628,7 +628,7 @@ export default function CrawlersPage() {
                                 <h3 className="text-lg font-medium text-white mb-4">CSS Selectors (Optional)</h3>
                                 <p className="text-gray-400 text-sm mb-4">Define selectors to extract content from articles</p>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1">Article Container</label>
                                         <input

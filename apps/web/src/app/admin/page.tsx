@@ -128,7 +128,7 @@ export default function AdminDashboard() {
 
     return (
         <div>
-            <h1 className="text-3xl font-bold text-white mb-8">Admin Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">Admin Dashboard</h1>
 
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
                 <h2 className="text-xl font-semibold text-white mb-4">AI Cost Monitor</h2>
                 {aiUsage ? (
                     <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                             <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                                 <p className="text-gray-400 text-xs uppercase tracking-wide">Total Calls</p>
                                 <p className="text-2xl font-bold text-white mt-1">{aiUsage.totalCalls}</p>
@@ -236,13 +236,13 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="divide-y divide-gray-700 max-h-64 overflow-y-auto">
                                     {aiUsage.recentCalls.slice(0, 10).map((call, i) => (
-                                        <div key={i} className="px-4 py-2 flex items-center justify-between text-sm">
-                                            <div className="flex items-center gap-3">
-                                                <span className={`w-2 h-2 rounded-full ${call.success ? 'bg-green-400' : 'bg-red-400'}`} />
+                                        <div key={i} className="px-3 sm:px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-sm">
+                                            <div className="flex items-center gap-2 sm:gap-3">
+                                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${call.success ? 'bg-green-400' : 'bg-red-400'}`} />
                                                 <span className="text-white capitalize">{call.provider}</span>
-                                                <span className="text-gray-500">{call.model}</span>
+                                                <span className="text-gray-500 text-xs sm:text-sm truncate">{call.model}</span>
                                             </div>
-                                            <div className="flex items-center gap-4 text-gray-400">
+                                            <div className="flex items-center gap-3 sm:gap-4 text-gray-400 text-xs sm:text-sm pl-4 sm:pl-0">
                                                 <span>{call.estimatedTokens.toLocaleString()} tokens</span>
                                                 <span>${call.estimatedCost.toFixed(4)}</span>
                                                 <span className="text-xs">
