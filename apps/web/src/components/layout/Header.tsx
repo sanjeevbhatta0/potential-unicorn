@@ -100,8 +100,37 @@ export function Header() {
       {/* Top Row: Logo, Search, Actions */}
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center group">
-          <img src="/logo.png" alt="NewsChautari.ai" className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]" />
+        <Link href="/" className="flex items-center gap-2 group" aria-label="NewsChautari.ai">
+          {/* Mountain + Chautari SVG icon */}
+          <svg
+            viewBox="0 0 48 40"
+            className="h-8 sm:h-9 w-auto flex-shrink-0"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            {/* Back mountain */}
+            <path d="M16 4L2 32h28L16 4z" className="fill-foreground/30" />
+            {/* Front mountain */}
+            <path d="M28 8L12 32h32L28 8z" className="fill-foreground/70" />
+            {/* Snow caps */}
+            <path d="M28 8l-3.5 5.5 2-1.5 1.5 2 1.5-2 2 1.5L28 8z" className="fill-background" />
+            <path d="M16 4l-2.5 4 1.5-1 1 1.5 1-1.5 1.5 1L16 4z" className="fill-background" />
+            {/* Chautari (brick resting place) */}
+            <rect x="8" y="32" width="24" height="7" rx="1" className="fill-red-600" />
+            {/* Brick lines */}
+            <line x1="8" y1="35" x2="32" y2="35" className="stroke-red-800" strokeWidth="0.5" />
+            <line x1="14" y1="32" x2="14" y2="35" className="stroke-red-800" strokeWidth="0.5" />
+            <line x1="20" y1="32" x2="20" y2="35" className="stroke-red-800" strokeWidth="0.5" />
+            <line x1="26" y1="32" x2="26" y2="35" className="stroke-red-800" strokeWidth="0.5" />
+            <line x1="11" y1="35" x2="11" y2="39" className="stroke-red-800" strokeWidth="0.5" />
+            <line x1="17" y1="35" x2="17" y2="39" className="stroke-red-800" strokeWidth="0.5" />
+            <line x1="23" y1="35" x2="23" y2="39" className="stroke-red-800" strokeWidth="0.5" />
+            <line x1="29" y1="35" x2="29" y2="39" className="stroke-red-800" strokeWidth="0.5" />
+          </svg>
+          <span className="text-lg sm:text-xl font-serif font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
+            NewsChautari<span className="text-red-600 dark:text-red-500">.ai</span>
+          </span>
         </Link>
 
         {/* Search and Actions */}
