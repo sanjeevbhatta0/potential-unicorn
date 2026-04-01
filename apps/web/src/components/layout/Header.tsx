@@ -100,18 +100,8 @@ export function Header() {
       {/* Top Row: Logo, Search, Actions */}
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3 group">
-          <div className="relative h-9 w-9 overflow-hidden rounded-md transition-transform group-hover:scale-105">
-            <img src="/logo.png" alt="NewsChautari.ai" className="h-full w-full object-cover" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-serif font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
-              NewsChautari<span className="text-primary">.ai</span>
-            </span>
-            <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase leading-none">
-              Smart. Short. Simple.
-            </span>
-          </div>
+        <Link href="/" className="flex items-center group">
+          <img src="/logo.png" alt="NewsChautari.ai" className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]" />
         </Link>
 
         {/* Search and Actions */}
