@@ -142,9 +142,15 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
     let progressCleanup: (() => void) | undefined;
     const articleData = article as any;
 
+    // Mirror the backend's health check: only use the cached DB summary if it
+    // looks complete. Without this, any previously-saved garbage summary keeps
+    // getting shown forever.
+    const cachedSummary = (articleData.aiSummary || '').trim();
+    const cachedSeoTitle = (articleData.seoTitle || '').trim();
+    const hasHealthyCache = cachedSummary.length >= 50 && cachedSeoTitle.length > 0;
+
     const loadAISummary = async () => {
-      // Check if AI data already exists (from DB/prop)
-      if (articleData.aiSummary) {
+      if (hasHealthyCache) {
         if (isMounted) {
           setSummaryData({
             summary: articleData.aiSummary,
@@ -170,7 +176,11 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
 
       try {
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'}/api/v1`;
-        const response = await fetch(`${apiUrl}/articles/${article.id}/process-ai`, {
+        // If there's a cached-but-unhealthy summary on this article, force
+        // regeneration so we don't get the same broken result back.
+        const needsForce = cachedSummary.length > 0 && !hasHealthyCache;
+        const url = `${apiUrl}/articles/${article.id}/process-ai${needsForce ? '?force=true' : ''}`;
+        const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });

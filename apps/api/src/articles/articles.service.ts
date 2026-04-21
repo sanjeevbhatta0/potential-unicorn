@@ -314,7 +314,20 @@ export class ArticlesService {
    * If already processed, returns cached data from DB
    * Otherwise, calls the configured AI provider directly
    */
-  async processArticleWithAI(id: string): Promise<{
+  /**
+   * A summary is considered "healthy" (safe to serve from cache) only if it's
+   * reasonably long AND the article has a non-empty seoTitle, which indicates
+   * the structured JSON was parsed successfully on the previous run.
+   * Without this check, any previously-saved garbage/empty summary would be
+   * served forever because of the truthy-check cache short-circuit.
+   */
+  private isAiSummaryHealthy(article: ArticleEntity): boolean {
+    const summary = article.aiSummary?.trim() || '';
+    const seoTitle = article.seoTitle?.trim() || '';
+    return summary.length >= 50 && seoTitle.length > 0;
+  }
+
+  async processArticleWithAI(id: string, force: boolean = false): Promise<{
     aiSummary: string;
     aiKeyPoints: string[];
     credibilityScore: number;
@@ -322,8 +335,8 @@ export class ArticlesService {
   }> {
     const article = await this.findOne(id);
 
-    // If already processed, return cached data
-    if (article.aiSummary) {
+    // If already processed with a healthy result, return cached data
+    if (!force && this.isAiSummaryHealthy(article)) {
       return {
         aiSummary: article.aiSummary,
         aiKeyPoints: article.aiKeyPoints || [],
@@ -411,6 +424,52 @@ export class ArticlesService {
     }
 
     return { processed: articles.length, succeeded, failed, results };
+  }
+
+  /**
+   * Batch re-process articles with broken AI summaries.
+   * Finds articles where aiSummary is missing, too short, or where seoTitle is
+   * empty (indicating the previous parse failed and saved garbage). Forces
+   * regeneration on each.
+   */
+  async reprocessBrokenSummaries(limit: number = 50): Promise<{
+    processed: number;
+    succeeded: number;
+    failed: number;
+    results: Array<{ id: string; title: string; status: string }>;
+  }> {
+    // Candidates: no summary, very short summary, or summary without seoTitle
+    // (seoTitle empty is the strongest signal that parsing failed previously).
+    const candidates = await this.articleRepository
+      .createQueryBuilder('a')
+      .where('a.ai_summary IS NULL')
+      .orWhere('LENGTH(a.ai_summary) < 50')
+      .orWhere('a.seo_title IS NULL')
+      .orWhere("a.seo_title = ''")
+      .orderBy('a.published_at', 'DESC')
+      .take(limit)
+      .getMany();
+
+    const results: Array<{ id: string; title: string; status: string }> = [];
+    let succeeded = 0;
+    let failed = 0;
+
+    for (const article of candidates) {
+      try {
+        await this.processArticleWithAI(article.id, true);
+        succeeded++;
+        results.push({ id: article.id, title: article.title.substring(0, 60), status: 'ok' });
+      } catch (error: any) {
+        failed++;
+        results.push({
+          id: article.id,
+          title: article.title.substring(0, 60),
+          status: error.message || 'unknown error',
+        });
+      }
+    }
+
+    return { processed: candidates.length, succeeded, failed, results };
   }
 
   /**
