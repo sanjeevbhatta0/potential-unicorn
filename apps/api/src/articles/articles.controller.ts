@@ -112,8 +112,8 @@ export class ArticlesController {
   @ApiOperation({ summary: 'Process article with AI (on-demand for existing articles)' })
   @ApiResponse({ status: 200, description: 'AI processing result returned' })
   @ApiResponse({ status: 404, description: 'Article not found' })
-  processWithAI(@Param('id') id: string) {
-    return this.articlesService.processArticleWithAI(id);
+  processWithAI(@Param('id') id: string, @Query('force') force?: string) {
+    return this.articlesService.processArticleWithAI(id, force === 'true' || force === '1');
   }
 
   @Post('reprocess-seo')
@@ -123,6 +123,15 @@ export class ArticlesController {
   @ApiResponse({ status: 200, description: 'SEO reprocessing results' })
   reprocessSeo(@Query('limit') limit?: number) {
     return this.articlesService.reprocessArticlesForSeo(limit || 20);
+  }
+
+  @Post('reprocess-broken')
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Batch re-process articles with missing or broken AI summaries' })
+  @ApiResponse({ status: 200, description: 'Reprocessing results' })
+  reprocessBroken(@Query('limit') limit?: number) {
+    return this.articlesService.reprocessBrokenSummaries(limit || 50);
   }
 
   @Post('recategorize/general')

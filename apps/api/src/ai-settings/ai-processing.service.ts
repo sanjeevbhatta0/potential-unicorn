@@ -201,18 +201,43 @@ ${content}`;
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+        generationConfig: { temperature: 0.7, maxOutputTokens: 4096, responseMimeType: 'application/json' },
       },
       { timeout: 60000 },
     );
-    const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Check for safety blocks at the prompt level
+    const blockReason = response.data.promptFeedback?.blockReason;
+    if (blockReason) {
+      throw new Error(`Gemini blocked the prompt: ${blockReason}`);
+    }
+
+    const candidate = response.data.candidates?.[0];
+    if (!candidate) {
+      throw new Error('Gemini returned no candidates');
+    }
+
+    const finishReason = candidate.finishReason;
+    const text = candidate.content?.parts?.[0]?.text || '';
+
+    if (!text) {
+      throw new Error(`Gemini returned empty content (finishReason: ${finishReason ?? 'unknown'})`);
+    }
+
+    // MAX_TOKENS means the JSON was cut off mid-stream — parsing will fail, so surface it clearly
+    if (finishReason === 'MAX_TOKENS') {
+      this.logger.warn(`Gemini response truncated at MAX_TOKENS (${text.length} chars). Parsing may fail.`);
+    } else if (finishReason && finishReason !== 'STOP') {
+      this.logger.warn(`Gemini finishReason=${finishReason}, length=${text.length}`);
+    }
+
     return this.parseAIResponse(text);
   }
 
   private async callAnthropic(apiKey: string, model: string, prompt: string) {
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
-      { model, max_tokens: 1024, messages: [{ role: 'user', content: prompt }] },
+      { model, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] },
       {
         headers: {
           'x-api-key': apiKey,
@@ -229,7 +254,7 @@ ${content}`;
   private async callOpenAI(apiKey: string, model: string, prompt: string) {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
-      { model, messages: [{ role: 'user', content: prompt }], max_tokens: 1024, temperature: 0.7 },
+      { model, messages: [{ role: 'user', content: prompt }], max_tokens: 4096, temperature: 0.7, response_format: { type: 'json_object' } },
       {
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         timeout: 60000,
@@ -242,7 +267,7 @@ ${content}`;
   private async callGroq(apiKey: string, model: string, prompt: string) {
     const response = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
-      { model, messages: [{ role: 'user', content: prompt }], max_tokens: 1024, temperature: 0.7 },
+      { model, messages: [{ role: 'user', content: prompt }], max_tokens: 4096, temperature: 0.7, response_format: { type: 'json_object' } },
       {
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         timeout: 60000,
@@ -253,30 +278,51 @@ ${content}`;
   }
 
   private parseAIResponse(text: string) {
+    if (!text) {
+      throw new Error('AI returned empty response');
+    }
+
+    // Strip ```json ... ``` or ``` ... ``` markdown fences that models sometimes add
+    let cleaned = text.trim();
+    const fenceMatch = cleaned.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    if (fenceMatch) {
+      cleaned = fenceMatch[1].trim();
+    }
+
+    // Extract the JSON object (first { to last })
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+      this.logger.error(`AI response contained no JSON object. Preview: ${cleaned.substring(0, 200)}`);
+      throw new Error('AI response did not contain a JSON object');
+    }
+
+    const jsonStr = cleaned.substring(firstBrace, lastBrace + 1);
+
+    let parsed: any;
     try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          summary: parsed.summary || text.substring(0, 500),
-          keyPoints: parsed.keyPoints || [],
-          category: this.normalizeCategory(parsed.category),
-          credibilityScore: parsed.credibilityScore || 7,
-          seoTitle: parsed.seoTitle || '',
-          seoDescription: parsed.seoDescription || '',
-          seoKeywords: parsed.seoKeywords || [],
-        };
-      }
-    } catch (e) { }
+      parsed = JSON.parse(jsonStr);
+    } catch (e: any) {
+      this.logger.error(
+        `Failed to parse AI JSON response: ${e.message}. Length=${jsonStr.length}. Preview: ${jsonStr.substring(0, 300)}`,
+      );
+      throw new Error(`AI response JSON parse failed: ${e.message}`);
+    }
+
+    const summary = typeof parsed.summary === 'string' ? parsed.summary.trim() : '';
+    if (!summary || summary.length < 20) {
+      this.logger.error(`AI response summary missing or too short (len=${summary.length})`);
+      throw new Error('AI response summary missing or too short');
+    }
 
     return {
-      summary: text.substring(0, 500),
-      keyPoints: [],
-      category: 'general',
-      credibilityScore: 7,
-      seoTitle: '',
-      seoDescription: '',
-      seoKeywords: [],
+      summary,
+      keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
+      category: this.normalizeCategory(parsed.category),
+      credibilityScore: typeof parsed.credibilityScore === 'number' ? parsed.credibilityScore : 7,
+      seoTitle: typeof parsed.seoTitle === 'string' ? parsed.seoTitle : '',
+      seoDescription: typeof parsed.seoDescription === 'string' ? parsed.seoDescription : '',
+      seoKeywords: Array.isArray(parsed.seoKeywords) ? parsed.seoKeywords : [],
     };
   }
 
