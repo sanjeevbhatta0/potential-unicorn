@@ -5,6 +5,7 @@ export interface Article {
   sourceId: string;
   title: string;
   titleEn?: string;
+  titleNe?: string;
   content: string;
   summary: string;
   summaryEn?: string;
@@ -19,6 +20,18 @@ export interface Article {
   viewCount: number;
   isTrending: boolean;
   embedding?: number[]; // Vector embedding for semantic search
+  // AI-generated fields
+  aiSummary?: string;
+  aiSummaryEn?: string;
+  aiSummaryNe?: string;
+  aiKeyPoints?: string[];
+  aiKeyPointsEn?: string[];
+  aiKeyPointsNe?: string[];
+  credibilityScore?: number;
+  newsRank?: number;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

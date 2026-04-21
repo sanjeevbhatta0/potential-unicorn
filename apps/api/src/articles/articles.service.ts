@@ -323,13 +323,29 @@ export class ArticlesService {
    */
   private isAiSummaryHealthy(article: ArticleEntity): boolean {
     const summary = article.aiSummary?.trim() || '';
+    const summaryEn = article.aiSummaryEn?.trim() || '';
+    const summaryNe = article.aiSummaryNe?.trim() || '';
     const seoTitle = article.seoTitle?.trim() || '';
-    return summary.length >= 50 && seoTitle.length > 0;
+    // Healthy = we have a usable original-language summary AND both translations
+    // AND the SEO fields were parsed successfully. If any bilingual field is empty,
+    // the language toggle can't work, so we should regenerate.
+    return (
+      summary.length >= 50 &&
+      summaryEn.length >= 20 &&
+      summaryNe.length >= 20 &&
+      seoTitle.length > 0
+    );
   }
 
   async processArticleWithAI(id: string, force: boolean = false): Promise<{
     aiSummary: string;
+    aiSummaryEn: string;
+    aiSummaryNe: string;
     aiKeyPoints: string[];
+    aiKeyPointsEn: string[];
+    aiKeyPointsNe: string[];
+    titleEn: string;
+    titleNe: string;
     credibilityScore: number;
     category?: string;
   }> {
@@ -339,7 +355,13 @@ export class ArticlesService {
     if (!force && this.isAiSummaryHealthy(article)) {
       return {
         aiSummary: article.aiSummary,
+        aiSummaryEn: article.aiSummaryEn || '',
+        aiSummaryNe: article.aiSummaryNe || '',
         aiKeyPoints: article.aiKeyPoints || [],
+        aiKeyPointsEn: article.aiKeyPointsEn || [],
+        aiKeyPointsNe: article.aiKeyPointsNe || [],
+        titleEn: article.titleEn || '',
+        titleNe: article.titleNe || '',
         credibilityScore: article.credibilityScore || 7,
         category: article.category,
       };
@@ -353,9 +375,17 @@ export class ArticlesService {
         article.id,
       );
 
-      // Update article with AI results including SEO fields
+      // Update article with AI results, bilingual summaries, and SEO fields
       article.aiSummary = result.summary;
+      article.aiSummaryEn = result.summaryEn;
+      article.aiSummaryNe = result.summaryNe;
       article.aiKeyPoints = result.keyPoints;
+      article.aiKeyPointsEn = result.keyPointsEn;
+      article.aiKeyPointsNe = result.keyPointsNe;
+      // Only overwrite titles if the AI returned something — don't clobber
+      // existing scraper-provided translations with empty strings.
+      if (result.titleEn) article.titleEn = result.titleEn;
+      if (result.titleNe) article.titleNe = result.titleNe;
       article.credibilityScore = result.credibilityScore;
       article.seoTitle = result.seoTitle || '';
       article.seoDescription = result.seoDescription || '';
@@ -373,7 +403,13 @@ export class ArticlesService {
 
       return {
         aiSummary: result.summary,
+        aiSummaryEn: result.summaryEn,
+        aiSummaryNe: result.summaryNe,
         aiKeyPoints: result.keyPoints,
+        aiKeyPointsEn: result.keyPointsEn,
+        aiKeyPointsNe: result.keyPointsNe,
+        titleEn: article.titleEn || '',
+        titleNe: article.titleNe || '',
         credibilityScore: result.credibilityScore,
         category: article.category,
       };
@@ -438,14 +474,20 @@ export class ArticlesService {
     failed: number;
     results: Array<{ id: string; title: string; status: string }>;
   }> {
-    // Candidates: no summary, very short summary, or summary without seoTitle
-    // (seoTitle empty is the strongest signal that parsing failed previously).
+    // Candidates: any article where the summary is missing/short, the SEO
+    // fields were never populated (strongest parse-failure signal), or either
+    // of the bilingual translations is missing (which breaks the UI language
+    // toggle).
     const candidates = await this.articleRepository
       .createQueryBuilder('a')
       .where('a.ai_summary IS NULL')
       .orWhere('LENGTH(a.ai_summary) < 50')
       .orWhere('a.seo_title IS NULL')
       .orWhere("a.seo_title = ''")
+      .orWhere('a.ai_summary_en IS NULL')
+      .orWhere("a.ai_summary_en = ''")
+      .orWhere('a.ai_summary_ne IS NULL')
+      .orWhere("a.ai_summary_ne = ''")
       .orderBy('a.published_at', 'DESC')
       .take(limit)
       .getMany();

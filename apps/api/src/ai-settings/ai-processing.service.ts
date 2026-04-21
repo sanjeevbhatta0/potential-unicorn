@@ -6,7 +6,13 @@ import axios from 'axios';
 
 export interface AISummaryResult {
   summary: string;
+  summaryEn: string;
+  summaryNe: string;
   keyPoints: string[];
+  keyPointsEn: string[];
+  keyPointsNe: string[];
+  titleEn: string;
+  titleNe: string;
   category: string;
   credibilityScore: number;
   seoTitle: string;
@@ -69,7 +75,20 @@ export class AIProcessingService {
     const costPer1k = modelInfo?.costPer1kTokens || 0.001;
     const estimatedCost = (estimatedTokens / 1000) * costPer1k;
 
-    let result: { summary: string; keyPoints: string[]; category: string; credibilityScore: number; seoTitle: string; seoDescription: string; seoKeywords: string[] };
+    type ParsedResult = {
+      summaryEn: string;
+      summaryNe: string;
+      keyPointsEn: string[];
+      keyPointsNe: string[];
+      titleEn: string;
+      titleNe: string;
+      category: string;
+      credibilityScore: number;
+      seoTitle: string;
+      seoDescription: string;
+      seoKeywords: string[];
+    };
+    let result: ParsedResult;
 
     try {
       switch (defaultProvider.provider) {
@@ -99,8 +118,25 @@ export class AIProcessingService {
         success: true,
       });
 
+      // `summary` and `keyPoints` (without language suffix) carry the article's
+      // original-language content for backward compatibility with existing code.
+      const primarySummary = language === 'ne' ? result.summaryNe : result.summaryEn;
+      const primaryKeyPoints = language === 'ne' ? result.keyPointsNe : result.keyPointsEn;
+
       return {
-        ...result,
+        summary: primarySummary || result.summaryEn || result.summaryNe,
+        keyPoints: primaryKeyPoints?.length ? primaryKeyPoints : (result.keyPointsEn || result.keyPointsNe || []),
+        summaryEn: result.summaryEn,
+        summaryNe: result.summaryNe,
+        keyPointsEn: result.keyPointsEn,
+        keyPointsNe: result.keyPointsNe,
+        titleEn: result.titleEn,
+        titleNe: result.titleNe,
+        category: result.category,
+        credibilityScore: result.credibilityScore,
+        seoTitle: result.seoTitle,
+        seoDescription: result.seoDescription,
+        seoKeywords: result.seoKeywords,
         provider: defaultProvider.provider,
         model: defaultProvider.modelId,
         estimatedTokens,
@@ -161,32 +197,36 @@ export class AIProcessingService {
   }
 
   private buildPrompt(title: string, content: string, language: string): string {
-    const langText = language === 'ne' ? 'Nepali' : 'English';
-    return `You are an expert SEO content analyst and news summarizer.
+    const origLang = language === 'ne' ? 'Nepali' : 'English';
+    return `You are an expert SEO content analyst and bilingual news summarizer.
 
-Analyze this news article and produce SEO-optimized metadata. Your output will be used for search engine indexing, social sharing, and AI/LLM discovery.
+Analyze this news article and produce SEO-optimized metadata in BOTH English and Nepali (नेपाली). The user-facing app has a language toggle that switches between them, so both must be complete, natural, and equivalent in information.
 
 Tasks:
-1. **summary**: Clear, informative summary (100-150 words) in ${langText}. Write it so both humans and AI models understand the key facts. Include who, what, when, where, why.
-2. **keyPoints**: 3-5 key takeaways as complete sentences (not fragments). Each should be independently meaningful for AI citation.
-3. **category**: Classify into ONE: Politics, Sports, Entertainment, Business, Technology, Health, Education, International, Opinion, General
-4. **credibilityScore**: 1-10 based on source quality, factual claims, and attribution
-5. **seoTitle**: An engaging, click-worthy headline (50-60 characters) in ${langText}. Include the primary topic and a relevant keyword. Do NOT just copy the original title.
-6. **seoDescription**: Meta description (140-155 characters) in ${langText}. Summarize the article's value proposition. Include primary keyword naturally. Write it to maximize click-through from search results.
-7. **seoKeywords**: 6-10 SEO keywords/phrases relevant to this article. Include a mix of:
-   - Primary topic keywords (e.g., "Nepal politics", "cricket world cup")
-   - Named entities (people, organizations, places mentioned)
-   - Long-tail search phrases users might search for
-   - Both ${langText} and English keywords if the article is in ${langText}
+1. **summaryEn**: Clear, informative English summary (100-150 words). Cover who, what, when, where, why.
+2. **summaryNe**: Same summary in natural Nepali (नेपाली). Not a word-for-word translation — idiomatic Nepali that reads naturally.
+3. **keyPointsEn**: 3-5 key takeaways as complete English sentences. Each must be independently meaningful.
+4. **keyPointsNe**: The same 3-5 key takeaways in Nepali, matched one-to-one with keyPointsEn.
+5. **titleEn**: A clean English headline (60-80 chars) conveying the same meaning as the original title.
+6. **titleNe**: A clean Nepali headline (60-80 chars) conveying the same meaning.
+7. **category**: ONE of: Politics, Sports, Entertainment, Business, Technology, Health, Education, International, Opinion, General
+8. **credibilityScore**: 1-10 based on source quality, factual claims, and attribution
+9. **seoTitle**: Engaging, click-worthy headline (50-60 chars) in the article's original language (${origLang}). Do NOT just copy the original.
+10. **seoDescription**: Meta description (140-155 chars) in ${origLang}. Include primary keyword naturally.
+11. **seoKeywords**: 6-10 mixed keywords (primary topic, named entities, long-tail searches). Include both English and Nepali variants.
 
-IMPORTANT: Respond in this exact JSON format:
+IMPORTANT: Respond ONLY with a JSON object matching this exact schema. No prose, no markdown fences:
 {
-  "summary": "your summary here",
-  "keyPoints": ["point 1", "point 2", "point 3"],
+  "summaryEn": "English summary here",
+  "summaryNe": "नेपाली सारांश यहाँ",
+  "keyPointsEn": ["point 1 in English", "point 2", "point 3"],
+  "keyPointsNe": ["नेपालीमा बुँदा १", "बुँदा २", "बुँदा ३"],
+  "titleEn": "English headline",
+  "titleNe": "नेपाली शीर्षक",
   "category": "category name",
   "credibilityScore": 7,
-  "seoTitle": "optimized title here",
-  "seoDescription": "meta description here",
+  "seoTitle": "SEO title in ${origLang}",
+  "seoDescription": "meta description in ${origLang}",
   "seoKeywords": ["keyword1", "keyword2", "keyword3"]
 }
 
@@ -201,7 +241,7 @@ ${content}`;
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 4096, responseMimeType: 'application/json' },
+        generationConfig: { temperature: 0.7, maxOutputTokens: 8192, responseMimeType: 'application/json' },
       },
       { timeout: 60000 },
     );
@@ -309,15 +349,22 @@ ${content}`;
       throw new Error(`AI response JSON parse failed: ${e.message}`);
     }
 
-    const summary = typeof parsed.summary === 'string' ? parsed.summary.trim() : '';
-    if (!summary || summary.length < 20) {
-      this.logger.error(`AI response summary missing or too short (len=${summary.length})`);
-      throw new Error('AI response summary missing or too short');
+    const summaryEn = typeof parsed.summaryEn === 'string' ? parsed.summaryEn.trim() : '';
+    const summaryNe = typeof parsed.summaryNe === 'string' ? parsed.summaryNe.trim() : '';
+    if ((!summaryEn || summaryEn.length < 20) && (!summaryNe || summaryNe.length < 20)) {
+      this.logger.error(
+        `AI response has no usable summary in either language (en=${summaryEn.length}, ne=${summaryNe.length})`,
+      );
+      throw new Error('AI response summaries missing or too short in both languages');
     }
 
     return {
-      summary,
-      keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
+      summaryEn,
+      summaryNe,
+      keyPointsEn: Array.isArray(parsed.keyPointsEn) ? parsed.keyPointsEn : [],
+      keyPointsNe: Array.isArray(parsed.keyPointsNe) ? parsed.keyPointsNe : [],
+      titleEn: typeof parsed.titleEn === 'string' ? parsed.titleEn : '',
+      titleNe: typeof parsed.titleNe === 'string' ? parsed.titleNe : '',
       category: this.normalizeCategory(parsed.category),
       credibilityScore: typeof parsed.credibilityScore === 'number' ? parsed.credibilityScore : 7,
       seoTitle: typeof parsed.seoTitle === 'string' ? parsed.seoTitle : '',

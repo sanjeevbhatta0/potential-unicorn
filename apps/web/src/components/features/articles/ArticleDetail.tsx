@@ -17,7 +17,15 @@ interface ArticleDetailProps {
 interface AISummaryData {
   summary: string;
   key_points: string[];
+  summary_en?: string;
+  summary_ne?: string;
+  key_points_en?: string[];
+  key_points_ne?: string[];
+  title_en?: string;
+  title_ne?: string;
 }
+
+type DisplayLang = 'en' | 'ne';
 
 // Helper to get credibility score styling (5-point scale)
 const getCredibilityStyle = (score: number) => {
@@ -98,6 +106,29 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
   const [credibilityScore, setCredibilityScore] = useState<number | null>(getInitialCredibilityScore(article));
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [hasAIData, setHasAIData] = useState(false);
+  // Language toggle: defaults to the article's original language.
+  const [displayLang, setDisplayLang] = useState<DisplayLang>(
+    (article.language as DisplayLang) === 'en' ? 'en' : 'ne',
+  );
+
+  // Resolve what summary/keyPoints/title to render for the selected language,
+  // falling back to the other language (and then to the original fields) so
+  // articles that were processed before the bilingual upgrade still render.
+  const resolvedSummary =
+    displayLang === 'en'
+      ? summaryData.summary_en || summaryData.summary || summaryData.summary_ne || ''
+      : summaryData.summary_ne || summaryData.summary || summaryData.summary_en || '';
+  const resolvedKeyPoints =
+    displayLang === 'en'
+      ? (summaryData.key_points_en?.length ? summaryData.key_points_en : summaryData.key_points) || []
+      : (summaryData.key_points_ne?.length ? summaryData.key_points_ne : summaryData.key_points) || [];
+  const resolvedTitle =
+    displayLang === 'en'
+      ? summaryData.title_en || (article as any).titleEn || article.title
+      : summaryData.title_ne || (article as any).titleNe || article.title;
+  // Only show the toggle once we have at least one translation
+  const showLangToggle =
+    !!(summaryData.summary_en && summaryData.summary_ne);
 
   const credibilityStyle = credibilityScore ? getCredibilityStyle(credibilityScore) : null;
   const sourceInfo = getSourceInfo(article.sourceId);
@@ -142,12 +173,19 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
     let progressCleanup: (() => void) | undefined;
     const articleData = article as any;
 
-    // Mirror the backend's health check: only use the cached DB summary if it
-    // looks complete. Without this, any previously-saved garbage summary keeps
-    // getting shown forever.
+    // Mirror the backend's health check: cache is usable only if we have a
+    // native-language summary, both bilingual translations, AND the SEO fields
+    // were parsed successfully. Missing any of those means the language toggle
+    // won't work, so regenerate.
     const cachedSummary = (articleData.aiSummary || '').trim();
+    const cachedSummaryEn = (articleData.aiSummaryEn || '').trim();
+    const cachedSummaryNe = (articleData.aiSummaryNe || '').trim();
     const cachedSeoTitle = (articleData.seoTitle || '').trim();
-    const hasHealthyCache = cachedSummary.length >= 50 && cachedSeoTitle.length > 0;
+    const hasHealthyCache =
+      cachedSummary.length >= 50 &&
+      cachedSummaryEn.length >= 20 &&
+      cachedSummaryNe.length >= 20 &&
+      cachedSeoTitle.length > 0;
 
     const loadAISummary = async () => {
       if (hasHealthyCache) {
@@ -155,6 +193,12 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
           setSummaryData({
             summary: articleData.aiSummary,
             key_points: articleData.aiKeyPoints || [],
+            summary_en: articleData.aiSummaryEn || '',
+            summary_ne: articleData.aiSummaryNe || '',
+            key_points_en: articleData.aiKeyPointsEn || [],
+            key_points_ne: articleData.aiKeyPointsNe || [],
+            title_en: articleData.titleEn || '',
+            title_ne: articleData.titleNe || '',
           });
           setCredibilityScore(articleData.credibilityScore ? convertTo5PointScale(articleData.credibilityScore) : null);
           setCurrentCategory(articleData.category || article.category);
@@ -201,6 +245,12 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
           setSummaryData({
             summary: data.aiSummary || 'Summary not available',
             key_points: data.aiKeyPoints || [],
+            summary_en: data.aiSummaryEn || '',
+            summary_ne: data.aiSummaryNe || '',
+            key_points_en: data.aiKeyPointsEn || [],
+            key_points_ne: data.aiKeyPointsNe || [],
+            title_en: data.titleEn || '',
+            title_ne: data.titleNe || '',
           });
 
           if (data.credibilityScore) {
@@ -274,7 +324,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
         </div>
 
         <h1 className="font-serif text-4xl md:text-5xl font-bold mb-6 leading-tight">
-          {article.title}
+          {resolvedTitle}
         </h1>
 
         <div className="flex items-center justify-between flex-wrap gap-4 text-sm text-muted-foreground">
@@ -322,19 +372,55 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
       {(!isLoadingSummary || hasAIData) && (
         <div className="max-w-[660px] mx-auto">
           <div className="mb-8 py-6 border-t border-b border-border">
-            <div className="flex items-center gap-3 mb-4">
-              <h2 className="font-serif text-xl font-bold">AI Summary</h2>
-              {hasAIData && (
-                <span className="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 rounded">
-                  AI Generated
-                </span>
+            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <h2 className="font-serif text-xl font-bold">AI Summary</h2>
+                {hasAIData && (
+                  <span className="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 rounded">
+                    AI Generated
+                  </span>
+                )}
+              </div>
+              {showLangToggle && (
+                <div
+                  role="group"
+                  aria-label="Summary language"
+                  className="inline-flex text-xs font-semibold rounded-full border border-border overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setDisplayLang('en')}
+                    aria-pressed={displayLang === 'en'}
+                    className={cn(
+                      'px-3 py-1 transition-colors',
+                      displayLang === 'en'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    EN
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDisplayLang('ne')}
+                    aria-pressed={displayLang === 'ne'}
+                    className={cn(
+                      'px-3 py-1 transition-colors border-l border-border',
+                      displayLang === 'ne'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    नेपाली
+                  </button>
+                </div>
               )}
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               This is an AI-generated summary. For full content, please visit the original source.
             </p>
             <p className="text-lg leading-relaxed">
-              {summaryData.summary || article.summary || 'Summary not available.'}
+              {resolvedSummary || article.summary || 'Summary not available.'}
             </p>
             {summaryError && (
               <p className="mt-3 text-sm text-amber-600">
@@ -344,11 +430,11 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
           </div>
 
           {/* Key Points */}
-          {summaryData.key_points.length > 0 && (
+          {resolvedKeyPoints.length > 0 && (
             <div className="mb-8">
               <h2 className="font-serif text-xl font-bold mb-4">Key Points</h2>
               <ul className="space-y-3">
-                {summaryData.key_points.map((point: string, index: number) => (
+                {resolvedKeyPoints.map((point: string, index: number) => (
                   <li key={index} className="flex items-start gap-3">
                     <span className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold rounded-full">
                       {index + 1}

@@ -33,6 +33,9 @@ export class ArticleEntity {
   @Column({ name: 'title_en', nullable: true })
   titleEn: string;
 
+  @Column({ name: 'title_ne', nullable: true })
+  titleNe: string;
+
   @Column('text')
   content: string;
 
@@ -93,14 +96,32 @@ export class ArticleEntity {
   embedding: number[];
 
   // AI-generated fields (populated at crawl-time for new articles, or on first view for existing)
+  // `aiSummary` holds the summary in the article's original language.
+  // `aiSummaryEn` / `aiSummaryNe` hold translated copies so the UI language toggle can
+  // switch between them without re-calling the AI. Same pattern for key points.
   @Column({ name: 'ai_summary', type: 'text', nullable: true })
   aiSummary: string;
+
+  @Column({ name: 'ai_summary_en', type: 'text', nullable: true })
+  aiSummaryEn: string;
+
+  @Column({ name: 'ai_summary_ne', type: 'text', nullable: true })
+  aiSummaryNe: string;
 
   @Column('simple-array', { name: 'ai_key_points', nullable: true })
   aiKeyPoints: string[];
 
+  @Column('simple-array', { name: 'ai_key_points_en', nullable: true })
+  aiKeyPointsEn: string[];
+
+  @Column('simple-array', { name: 'ai_key_points_ne', nullable: true })
+  aiKeyPointsNe: string[];
+
   @Column({ name: 'credibility_score', type: 'int', nullable: true })
   credibilityScore: number;
+
+  @Column({ name: 'news_rank', type: 'int', nullable: true })
+  newsRank: number;
 
   @Column({ name: 'seo_title', type: 'text', nullable: true })
   seoTitle: string;
